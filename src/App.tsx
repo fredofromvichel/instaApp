@@ -1,26 +1,92 @@
-import { EngineDemo } from "./demo/EngineDemo";
-
 /**
- * Placeholder shell (task 02) hosting the engine demo (task 03).
- * The real wizard UI arrives with task 04.
+ * Wizard shell (task 04): header with back navigation + progress dots,
+ * the current step, and the bottom action bar (one primary action).
  */
+import "./app.css";
+import { STEP_TITLES, STEPS, useWizard, WizardProvider } from "./state/wizard";
+import { FormatStep } from "./steps/FormatStep";
+import {
+  AdjustStep,
+  ContentStep,
+  DownloadStep,
+} from "./steps/PlaceholderSteps";
+import { TemplateStep } from "./steps/TemplateStep";
+
+function stepContent(step: (typeof STEPS)[number]) {
+  switch (step) {
+    case "format":
+      return <FormatStep />;
+    case "template":
+      return <TemplateStep />;
+    case "content":
+      return <ContentStep />;
+    case "adjust":
+      return <AdjustStep />;
+    case "download":
+      return <DownloadStep />;
+  }
+}
+
+function Wizard() {
+  const { state, dispatch } = useWizard();
+  const stepIndex = STEPS.indexOf(state.step);
+
+  const canContinue =
+    state.step === "format"
+      ? state.formatId !== null
+      : state.step === "template"
+        ? state.templateId !== null
+        : state.step !== "download";
+
+  return (
+    <div className="app">
+      <header className="wizard-header">
+        {stepIndex > 0 ? (
+          <button
+            type="button"
+            className="back-button"
+            aria-label="Zurück"
+            onClick={() => dispatch({ type: "back" })}
+          >
+            ‹
+          </button>
+        ) : (
+          <span />
+        )}
+        <h1>{STEP_TITLES[state.step]}</h1>
+        <span />
+      </header>
+      <div className="progress-dots" aria-hidden="true">
+        {STEPS.map((step, i) => (
+          <span
+            key={step}
+            className={
+              i === stepIndex ? "current" : i < stepIndex ? "done" : ""
+            }
+          />
+        ))}
+      </div>
+      <main className="step-main">{stepContent(state.step)}</main>
+      {state.step !== "download" && (
+        <div className="bottom-bar">
+          <button
+            type="button"
+            className="button-primary"
+            disabled={!canContinue}
+            onClick={() => dispatch({ type: "next" })}
+          >
+            Weiter
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function App() {
   return (
-    <main
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: "0.5rem",
-        padding: "1.5rem 0.5rem",
-        textAlign: "center",
-      }}
-    >
-      <h1 style={{ margin: 0 }}>Insta-Studio</h1>
-      <p style={{ margin: 0, maxWidth: "28rem" }}>
-        Gestalte schöne Instagram-Posts – ganz einfach auf deinem Handy.
-      </p>
-      <EngineDemo />
-    </main>
+    <WizardProvider>
+      <Wizard />
+    </WizardProvider>
   );
 }

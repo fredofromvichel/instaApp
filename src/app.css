@@ -1,0 +1,267 @@
+/* Design system (task 04): warm, friendly, mobile-first. One primary action
+   per screen, generous touch targets, informal German labels. */
+
+:root {
+  --bg: #f7f2ec;
+  --surface: #ffffff;
+  --ink: #2a2621;
+  --muted: #8a7f70;
+  --accent: #c96f4a;
+  --accent-ink: #ffffff;
+  --line: #e6ddd1;
+  --radius: 16px;
+  --radius-lg: 24px;
+  --shadow: 0 2px 12px rgba(42, 38, 33, 0.12);
+  --bottom-bar-height: 84px;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* ------------------------------------------------------------- header */
+
+.wizard-header {
+  display: grid;
+  grid-template-columns: 48px 1fr 48px;
+  align-items: center;
+  padding: 12px 8px 4px;
+}
+
+.wizard-header h1 {
+  margin: 0;
+  font-size: 1.15rem;
+  text-align: center;
+}
+
+.back-button {
+  border: none;
+  background: none;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--ink);
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.progress-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 0 4px;
+}
+
+.progress-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--line);
+  transition: background 0.2s;
+}
+
+.progress-dots span.done {
+  background: var(--muted);
+}
+
+.progress-dots span.current {
+  background: var(--accent);
+}
+
+/* --------------------------------------------------------------- main */
+
+.step-main {
+  flex: 1;
+  padding: 8px 16px calc(var(--bottom-bar-height) + 24px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.step-hint {
+  margin: 0;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* ------------------------------------------------------------ buttons */
+
+.button-primary {
+  width: 100%;
+  min-height: 56px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.06s,
+    opacity 0.2s;
+}
+
+.button-primary:active {
+  transform: scale(0.98);
+}
+
+.button-primary:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.button-secondary {
+  min-height: 48px;
+  padding: 0 20px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------- bottom bar */
+
+.bottom-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: linear-gradient(transparent, var(--bg) 40%);
+}
+
+.bottom-bar > * {
+  max-width: 608px;
+  flex: 1;
+}
+
+/* -------------------------------------------------------------- cards */
+
+.card-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.select-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  border: 3px solid transparent;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: center;
+}
+
+.select-card.selected {
+  border-color: var(--accent);
+}
+
+.select-card .card-title {
+  font-weight: 700;
+}
+
+.select-card .card-caption {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* Format cards: proportional boxes previewing the aspect ratio. */
+.format-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+}
+
+.format-grid .select-card {
+  min-width: 0;
+  padding: 14px 6px;
+}
+
+.format-shape {
+  width: 56px;
+  background: var(--line);
+  border-radius: 8px;
+}
+
+/* ---------------------------------------------------------- chips/tabs */
+
+.chip-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chip {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chip.selected {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* ----------------------------------------------------- template grid */
+
+.template-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.template-card {
+  padding: 10px;
+  gap: 8px;
+}
+
+.template-card canvas {
+  width: 100%;
+  border-radius: 12px;
+}
+
+/* ------------------------------------------------------------ preview */
+
+.post-preview {
+  display: flex;
+  justify-content: center;
+}
+
+.post-preview canvas {
+  max-height: 52dvh;
+  width: auto;
+  max-width: 100%;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+/* --------------------------------------------------------- empty state */
+
+.empty-state {
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--muted);
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+}
