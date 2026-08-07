@@ -256,6 +256,53 @@
   box-shadow: var(--shadow);
 }
 
+/* -------------------------------------------------------------- fields */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.field input,
+.field textarea {
+  /* 16px+ prevents iOS Safari from zooming into focused inputs. */
+  font-size: 1rem;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px;
+  min-height: 52px;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.field input:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.field-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.form-section-title {
+  margin: 8px 0 0;
+  font-size: 1rem;
+}
+
 /* --------------------------------------------------------- empty state */
 
 .empty-state {

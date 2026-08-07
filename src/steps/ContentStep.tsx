@@ -5,6 +5,7 @@
  */
 import { type ChangeEvent, useRef, useState } from "react";
 import { PostPreview } from "../components/PostPreview";
+import { TextField } from "../components/TextField";
 import type { Frame, PhotoValue, Template } from "../engine/types";
 import { DEFAULT_CROP } from "../engine/types";
 import { panCrop, pinchCrop } from "../lib/cropGestures";
@@ -148,6 +149,7 @@ export function ContentStep() {
   const photoSlot = photoSlotOf(template);
   const frame = photoSlot?.frames[state.formatId];
   const hasPhoto = state.values.photo?.type === "photo";
+  const textSlots = template.slots.filter((slot) => slot.type === "text");
 
   async function onFileChosen(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -222,6 +224,14 @@ export function ContentStep() {
               {photoError}
             </p>
           )}
+        </>
+      )}
+      {textSlots.length > 0 && (
+        <>
+          <h2 className="form-section-title">Deine Texte</h2>
+          {textSlots.map((slot) => (
+            <TextField key={slot.id} slot={slot} />
+          ))}
         </>
       )}
     </>
