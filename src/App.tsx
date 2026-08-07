@@ -8,8 +8,8 @@ import { BrandProvider, useBrand } from "./state/brand";
 import { STEP_TITLES, STEPS, useWizard, WizardProvider } from "./state/wizard";
 import { AdjustStep } from "./steps/AdjustStep";
 import { ContentStep } from "./steps/ContentStep";
+import { DownloadStep } from "./steps/DownloadStep";
 import { FormatStep } from "./steps/FormatStep";
-import { DownloadStep } from "./steps/PlaceholderSteps";
 import { TemplateStep } from "./steps/TemplateStep";
 
 function stepContent(step: (typeof STEPS)[number]) {
