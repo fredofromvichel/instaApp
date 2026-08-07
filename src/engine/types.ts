@@ -44,6 +44,15 @@ export type Fill =
       to: ColorRole;
       /** CSS convention: 0 = to top, 90 = to right. */
       angle: number;
+    }
+  | {
+      /** Transparent → color gradient, e.g. to keep text readable on photos. */
+      type: "scrim";
+      role: ColorRole;
+      /** "down": transparent at top, solid at bottom. "up": the reverse. */
+      direction: "up" | "down";
+      /** Peak opacity at the solid end (0..1). */
+      opacity: number;
     };
 
 /* ---------------------------------------------------------------- geometry */
@@ -145,6 +154,11 @@ export interface TextSlot extends SlotBase {
     paddingY: number;
     cornerRadius: number;
   };
+  /**
+   * Fixed decorative text (captions, eyebrows like "STECKBRIEF"): always
+   * renders `example`, never appears in the editing form.
+   */
+  fixed?: boolean;
   /** German example content so previews look finished (SPEC.md §5). */
   example: string;
 }
@@ -235,4 +249,9 @@ export interface RenderInput {
   values: Record<string, SlotValue>;
   /** Keyed by slot id; clamped against each slot's guardrails. */
   adjustments?: Record<string, SlotAdjustment>;
+  /**
+   * Catalog previews: render optional text slots with their example content
+   * so templates look finished before the user edits anything.
+   */
+  previewExamples?: boolean;
 }

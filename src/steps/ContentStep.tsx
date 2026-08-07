@@ -7,7 +7,7 @@ import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { PostPreview } from "../components/PostPreview";
 import { QrField } from "../components/QrField";
 import { TextField } from "../components/TextField";
-import type { Frame, PhotoValue, Template } from "../engine/types";
+import type { Frame, PhotoValue, Template, TextSlot } from "../engine/types";
 import { DEFAULT_CROP } from "../engine/types";
 import { panCrop, pinchCrop } from "../lib/cropGestures";
 import { loadPhotoFile } from "../lib/photo";
@@ -205,7 +205,9 @@ export function ContentStep() {
   const photoSlot = photoSlotOf(template);
   const frame = photoSlot?.frames[state.formatId];
   const hasPhoto = state.values.photo?.type === "photo";
-  const textSlots = template.slots.filter((slot) => slot.type === "text");
+  const textSlots = template.slots.filter(
+    (slot): slot is TextSlot => slot.type === "text" && !slot.fixed,
+  );
   const qrSlot = template.slots.find((slot) => slot.type === "qr");
   const logoSlot = template.slots.find((slot) => slot.type === "logo");
 

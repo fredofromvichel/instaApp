@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sampleTemplate } from "../templates/sample";
+import { productTemplates } from "../templates/products";
 import { deriveBrandPalette, relativeLuminance, textOn } from "./brandPalette";
 
 describe("relativeLuminance", () => {
@@ -26,7 +26,7 @@ describe("textOn", () => {
 
 describe("deriveBrandPalette", () => {
   it("swaps accent + textOnAccent, keeps the rest of the base palette", () => {
-    const base = sampleTemplate.palettes[0];
+    const base = productTemplates[0]?.palettes[0];
     if (!base) throw new Error("sample template has no palette");
     const brand = deriveBrandPalette(base, "#123456", 0);
     expect(brand.colors.accent).toBe("#123456");

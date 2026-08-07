@@ -55,7 +55,12 @@ export function TemplateStep() {
               }
             >
               <PostPreview
-                input={{ template, formatId, values: {} }}
+                input={{
+                  template,
+                  formatId,
+                  values: {},
+                  previewExamples: true,
+                }}
                 ariaLabel={`Vorlage ${template.name}`}
               />
               <span className="card-title">{template.name}</span>

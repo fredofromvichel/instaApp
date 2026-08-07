@@ -58,6 +58,15 @@ export async function ensureFontsLoaded(
   }
 }
 
+function hexToRgba(hex: string, alpha: number): string {
+  const match = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!match?.[1]) return `rgba(0,0,0,${alpha})`;
+  const r = Number.parseInt(match[1].slice(0, 2), 16);
+  const g = Number.parseInt(match[1].slice(2, 4), 16);
+  const b = Number.parseInt(match[1].slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
 function resolveFill(
   ctx: CanvasRenderingContext2D,
   fill: Fill,
@@ -65,6 +74,19 @@ function resolveFill(
   frame: Frame,
 ): string | CanvasGradient {
   if (fill.type === "solid") return palette.colors[fill.role];
+  if (fill.type === "scrim") {
+    const color = palette.colors[fill.role];
+    const gradient = ctx.createLinearGradient(
+      frame.x,
+      fill.direction === "down" ? frame.y : frame.y + frame.h,
+      frame.x,
+      fill.direction === "down" ? frame.y + frame.h : frame.y,
+    );
+    gradient.addColorStop(0, hexToRgba(color, 0));
+    gradient.addColorStop(0.35, hexToRgba(color, fill.opacity * 0.45));
+    gradient.addColorStop(1, hexToRgba(color, fill.opacity));
+    return gradient;
+  }
   // CSS convention: 0deg = to top, 90deg = to right.
   const angle = (fill.angle * Math.PI) / 180;
   const dirX = Math.sin(angle);
@@ -304,10 +326,11 @@ export async function renderPost(
         break;
       case "text": {
         const value = input.values[slot.id];
-        const text =
-          value?.type === "text"
+        const text = slot.fixed
+          ? slot.example
+          : value?.type === "text"
             ? value.text
-            : slot.optional
+            : slot.optional && !input.previewExamples
               ? ""
               : slot.example;
         if (text.trim() !== "") drawText(ctx, slot, frame, palette, text);

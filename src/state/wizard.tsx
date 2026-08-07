@@ -139,7 +139,7 @@ function initState(defaultState: WizardState): WizardState {
       format === "square" || format === "portrait" || format === "story"
         ? format
         : "square",
-    templateId: params.get("template") ?? "sample-offer",
+    templateId: params.get("template") ?? "produkt-klassik",
   };
 }
 
