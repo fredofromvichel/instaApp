@@ -5,6 +5,7 @@
  */
 import { type ChangeEvent, useRef, useState } from "react";
 import { PostPreview } from "../components/PostPreview";
+import { QrField } from "../components/QrField";
 import { TextField } from "../components/TextField";
 import type { Frame, PhotoValue, Template } from "../engine/types";
 import { DEFAULT_CROP } from "../engine/types";
@@ -150,6 +151,7 @@ export function ContentStep() {
   const frame = photoSlot?.frames[state.formatId];
   const hasPhoto = state.values.photo?.type === "photo";
   const textSlots = template.slots.filter((slot) => slot.type === "text");
+  const qrSlot = template.slots.find((slot) => slot.type === "qr");
 
   async function onFileChosen(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -232,6 +234,12 @@ export function ContentStep() {
           {textSlots.map((slot) => (
             <TextField key={slot.id} slot={slot} />
           ))}
+        </>
+      )}
+      {qrSlot && (
+        <>
+          <h2 className="form-section-title">QR-Code</h2>
+          <QrField slotId={qrSlot.id} />
         </>
       )}
     </>
