@@ -11,7 +11,13 @@ import {
 
 export function TemplateStep() {
   const { state, dispatch } = useWizard();
-  const [category, setCategory] = useState<TemplateCategory>("products");
+  const [category, setCategory] = useState<TemplateCategory>(() => {
+    if (import.meta.env.DEV) {
+      const param = new URLSearchParams(window.location.search).get("category");
+      if (param === "quotes" || param === "dogs") return param;
+    }
+    return "products";
+  });
   const templates = templatesByCategory(category);
   const formatId = state.formatId ?? "square";
 
