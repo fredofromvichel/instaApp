@@ -3,6 +3,8 @@
  * the current step, and the bottom action bar (one primary action).
  */
 import "./app.css";
+import { useAutosave } from "./lib/useAutosave";
+import { BrandProvider, useBrand } from "./state/brand";
 import { STEP_TITLES, STEPS, useWizard, WizardProvider } from "./state/wizard";
 import { AdjustStep } from "./steps/AdjustStep";
 import { ContentStep } from "./steps/ContentStep";
@@ -27,6 +29,8 @@ function stepContent(step: (typeof STEPS)[number]) {
 
 function Wizard() {
   const { state, dispatch } = useWizard();
+  const { kit } = useBrand();
+  const storageError = useAutosave(state, kit);
   const stepIndex = STEPS.indexOf(state.step);
 
   const canContinue =
@@ -64,7 +68,15 @@ function Wizard() {
           />
         ))}
       </div>
-      <main className="step-main">{stepContent(state.step)}</main>
+      <main className="step-main">
+        {storageError && (
+          <p className="field-hint" role="alert" style={{ color: "#b3402a" }}>
+            Der Speicher deines Handys ist voll – dein Entwurf kann gerade nicht
+            gesichert werden. Lösche alte Entwürfe oder Fotos.
+          </p>
+        )}
+        {stepContent(state.step)}
+      </main>
       {state.step !== "download" && (
         <div className="bottom-bar">
           <button
@@ -83,8 +95,10 @@ function Wizard() {
 
 export function App() {
   return (
-    <WizardProvider>
-      <Wizard />
-    </WizardProvider>
+    <BrandProvider>
+      <WizardProvider>
+        <Wizard />
+      </WizardProvider>
+    </BrandProvider>
   );
 }

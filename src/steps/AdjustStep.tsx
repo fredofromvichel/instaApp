@@ -14,6 +14,8 @@ import type { SlotAdjustment, Template } from "../engine/types";
 import { IDENTITY_ADJUSTMENT, LOCKED } from "../engine/types";
 import { getFormat } from "../lib/formats";
 import { findAdjustableSlotAt } from "../lib/hitTest";
+import { brandPalettesFor, buildRenderInput } from "../lib/renderInput";
+import { useBrand } from "../state/brand";
 import { useWizard } from "../state/wizard";
 import { getTemplate } from "../templates/catalog";
 
@@ -26,10 +28,12 @@ interface GestureState {
 
 function PaletteChips({ template }: { template: Template }) {
   const { state, dispatch } = useWizard();
+  const { kit } = useBrand();
   const activeId = state.paletteId ?? template.palettes[0]?.id;
+  const palettes = [...template.palettes, ...brandPalettesFor(template, kit)];
   return (
     <div className="chip-row">
-      {template.palettes.map((palette) => (
+      {palettes.map((palette) => (
         <button
           key={palette.id}
           type="button"
@@ -55,6 +59,7 @@ function PaletteChips({ template }: { template: Template }) {
 
 export function AdjustStep() {
   const { state, dispatch } = useWizard();
+  const { kit } = useBrand();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const gesture = useRef<GestureState>({
@@ -230,13 +235,7 @@ export function AdjustStep() {
       >
         <div className="preview-stage">
           <PostPreview
-            input={{
-              template,
-              formatId,
-              paletteId: state.paletteId ?? undefined,
-              values: state.values,
-              adjustments: state.adjustments,
-            }}
+            input={buildRenderInput(state, template, kit)}
             ariaLabel="Vorschau deines Posts"
           />
           {/* Dashed hints on adjustable elements; solid outline when selected. */}

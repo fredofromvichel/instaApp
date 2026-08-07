@@ -3,7 +3,7 @@
  * Task 05: photo picking + pan/pinch cropping directly on the live preview.
  * Task 06 adds the text inputs below the preview.
  */
-import { type ChangeEvent, useRef, useState } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { PostPreview } from "../components/PostPreview";
 import { QrField } from "../components/QrField";
 import { TextField } from "../components/TextField";
@@ -11,6 +11,8 @@ import type { Frame, PhotoValue, Template } from "../engine/types";
 import { DEFAULT_CROP } from "../engine/types";
 import { panCrop, pinchCrop } from "../lib/cropGestures";
 import { loadPhotoFile } from "../lib/photo";
+import { buildRenderInput } from "../lib/renderInput";
+import { useBrand } from "../state/brand";
 import { useWizard } from "../state/wizard";
 import { getTemplate } from "../templates/catalog";
 
@@ -32,6 +34,7 @@ function PhotoCropPreview({
   frame: Frame;
 }) {
   const { state, dispatch } = useWizard();
+  const { kit } = useBrand();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const gesture = useRef<PointerState>({
     pointers: new Map(),
@@ -117,16 +120,68 @@ function PhotoCropPreview({
       onPointerCancel={onPointerEnd}
     >
       <PostPreview
-        input={{
-          template,
-          formatId: state.formatId ?? "square",
-          paletteId: state.paletteId ?? undefined,
-          values: state.values,
-          adjustments: state.adjustments,
-        }}
+        input={buildRenderInput(state, template, kit)}
         ariaLabel="Vorschau deines Posts"
       />
     </div>
+  );
+}
+
+/** Offer the saved brand logo for the template's logo slot (task 09). */
+function LogoToggle({ slotId }: { slotId: string }) {
+  const { state, dispatch } = useWizard();
+  const { kit } = useBrand();
+  const logoOff = state.values["logo:off"] !== undefined;
+  const hasLogoValue = state.values[slotId]?.type === "image";
+
+  // Auto-apply the saved logo unless the user switched it off.
+  useEffect(() => {
+    if (!kit.logo || hasLogoValue || logoOff) return;
+    let cancelled = false;
+    createImageBitmap(kit.logo.blob)
+      .then((bitmap) => {
+        if (cancelled) {
+          bitmap.close();
+          return;
+        }
+        dispatch({
+          type: "setValue",
+          slotId,
+          value: {
+            type: "image",
+            source: bitmap,
+            width: bitmap.width,
+            height: bitmap.height,
+          },
+        });
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [kit.logo, hasLogoValue, logoOff, slotId, dispatch]);
+
+  if (!kit.logo) return null;
+  return (
+    <label className="toggle-row">
+      <input
+        type="checkbox"
+        checked={hasLogoValue}
+        onChange={(e) => {
+          if (e.target.checked) {
+            dispatch({ type: "setValue", slotId: "logo:off", value: null });
+          } else {
+            dispatch({ type: "setValue", slotId, value: null });
+            dispatch({
+              type: "setValue",
+              slotId: "logo:off",
+              value: { type: "text", text: "1" },
+            });
+          }
+        }}
+      />
+      Dein Logo zeigen
+    </label>
   );
 }
 
@@ -152,6 +207,7 @@ export function ContentStep() {
   const hasPhoto = state.values.photo?.type === "photo";
   const textSlots = template.slots.filter((slot) => slot.type === "text");
   const qrSlot = template.slots.find((slot) => slot.type === "qr");
+  const logoSlot = template.slots.find((slot) => slot.type === "logo");
 
   async function onFileChosen(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -242,6 +298,7 @@ export function ContentStep() {
           <QrField slotId={qrSlot.id} />
         </>
       )}
+      {logoSlot && <LogoToggle slotId={logoSlot.id} />}
     </>
   );
 }

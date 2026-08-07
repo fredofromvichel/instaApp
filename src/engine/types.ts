@@ -226,6 +226,11 @@ export interface RenderInput {
   formatId: FormatId;
   /** Defaults to the template's first palette. */
   paletteId?: string;
+  /**
+   * Explicit palette override (e.g. a brand-kit palette that is not part of
+   * the template). Takes precedence over paletteId.
+   */
+  palette?: Palette;
   /** Keyed by slot id. Missing required text slots fall back to `example`. */
   values: Record<string, SlotValue>;
   /** Keyed by slot id; clamped against each slot's guardrails. */

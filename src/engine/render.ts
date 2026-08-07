@@ -26,6 +26,7 @@ import type {
 import { IDENTITY_ADJUSTMENT, LOCKED } from "./types";
 
 export function resolvePalette(input: RenderInput): Palette {
+  if (input.palette) return input.palette;
   const { template, paletteId } = input;
   const palette =
     template.palettes.find((p) => p.id === paletteId) ?? template.palettes[0];

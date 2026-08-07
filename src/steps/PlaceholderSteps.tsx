@@ -1,14 +1,16 @@
 /**
- * Interim panels for steps 3–5 (task 04). They already show the live preview
- * so the flow feels real; the actual editing arrives with tasks 05/06
- * (Inhalte), 08 (Anpassen), and 13 (Herunterladen).
+ * Interim panel for step 5 (task 04/09). The real download flow arrives with
+ * task 13.
  */
 import { PostPreview } from "../components/PostPreview";
+import { buildRenderInput } from "../lib/renderInput";
+import { useBrand } from "../state/brand";
 import { useWizard } from "../state/wizard";
 import { getTemplate } from "../templates/catalog";
 
 function PreviewPanel({ hint }: { hint: string }) {
   const { state } = useWizard();
+  const { kit } = useBrand();
   const template = state.templateId ? getTemplate(state.templateId) : undefined;
   if (!template || !state.formatId) {
     return (
@@ -23,13 +25,7 @@ function PreviewPanel({ hint }: { hint: string }) {
     <>
       <div className="post-preview">
         <PostPreview
-          input={{
-            template,
-            formatId: state.formatId,
-            paletteId: state.paletteId ?? undefined,
-            values: state.values,
-            adjustments: state.adjustments,
-          }}
+          input={buildRenderInput(state, template, kit)}
           ariaLabel="Vorschau deines Posts"
         />
       </div>

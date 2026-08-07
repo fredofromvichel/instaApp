@@ -1,9 +1,14 @@
-/** Step 1: Format wählen — visual cards previewing the aspect ratio. */
+/** Step 1: Format wählen — visual cards previewing the aspect ratio.
+ *  Also the app's home: saved drafts and the "Mein Stil" brand kit live here. */
+import { useState } from "react";
+import { BrandKitSheet } from "../components/BrandKitSheet";
+import { DraftList } from "../components/DraftList";
 import { POST_FORMATS } from "../lib/formats";
 import { useWizard } from "../state/wizard";
 
 export function FormatStep() {
   const { state, dispatch } = useWizard();
+  const [brandOpen, setBrandOpen] = useState(false);
 
   return (
     <>
@@ -31,6 +36,15 @@ export function FormatStep() {
           </button>
         ))}
       </div>
+      <button
+        type="button"
+        className="button-secondary"
+        onClick={() => setBrandOpen(true)}
+      >
+        🎨 Mein Stil (Logo & Farben)
+      </button>
+      <DraftList />
+      {brandOpen && <BrandKitSheet onClose={() => setBrandOpen(false)} />}
     </>
   );
 }
