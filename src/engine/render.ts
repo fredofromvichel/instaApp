@@ -325,6 +325,13 @@ export async function renderPost(
         drawPhoto(ctx, slot, frame, input, palette);
         break;
       case "text": {
+        if (
+          slot.showWith &&
+          input.values[slot.showWith] === undefined &&
+          !input.previewExamples
+        ) {
+          break;
+        }
         const value = input.values[slot.id];
         const text = slot.fixed
           ? slot.example

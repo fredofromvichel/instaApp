@@ -159,6 +159,11 @@ export interface TextSlot extends SlotBase {
    * renders `example`, never appears in the editing form.
    */
   fixed?: boolean;
+  /**
+   * Only render this (fixed) slot when the referenced slot has a value —
+   * captions collapse together with their companion content.
+   */
+  showWith?: string;
   /** German example content so previews look finished (SPEC.md §5). */
   example: string;
 }

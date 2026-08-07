@@ -3,6 +3,7 @@
  * Template-set tasks (10–12) register their templates here.
  */
 import type { Template, TemplateCategory } from "../engine/types";
+import { dogTemplates } from "./dogs";
 import { productTemplates } from "./products";
 import { quoteTemplates } from "./quotes";
 
@@ -14,7 +15,11 @@ export const CATEGORY_LABELS: Record<TemplateCategory, string> = {
 
 export const CATEGORIES: TemplateCategory[] = ["products", "quotes", "dogs"];
 
-export const TEMPLATES: Template[] = [...productTemplates, ...quoteTemplates];
+export const TEMPLATES: Template[] = [
+  ...productTemplates,
+  ...quoteTemplates,
+  ...dogTemplates,
+];
 
 export function getTemplate(id: string): Template | undefined {
   return TEMPLATES.find((t) => t.id === id);
