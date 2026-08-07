@@ -129,7 +129,23 @@ download fallback with per-platform German instructions. Sensible file names.
 - The whole flow must be completable one-handed on a phone by a first-time
   user without instructions.
 
-## 9. Task map
+## 9. Implementation notes (where reality refined the spec)
+
+- **QR styling:** always near-black modules on white (not palette-derived) —
+  maximum scannability beats color matching; §6's contrast requirement is
+  thereby trivially guaranteed.
+- **Schema extensions** beyond §4: `scrim` fills (photo-overlay gradients),
+  `fixed` decorative text slots (captions/eyebrows that never appear in the
+  form), and `showWith` (captions collapse together with their companion
+  slot — keeps sparse dog CVs looking intentional).
+- **Dog character tags:** rendered as one accent-colored line separated by
+  "·" (one input field), not individual chip elements.
+- **Onboarding:** one friendly sheet with three steps instead of multiple
+  screens — fewer taps, same message.
+- **Brand palettes:** a saved brand color becomes the template's default
+  palette with accent + contrast-safe text-on-accent swapped in.
+
+## 10. Task map
 
 Implementation is broken into tasks 01–15 on the Vibe Kanban board
 (project "instaApp"). Key dependency: task 03 (template schema + render
