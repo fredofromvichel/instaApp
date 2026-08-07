@@ -36,6 +36,22 @@ that touches templates.
 
 ## Stack & commands
 
-Not yet scaffolded — defined by task 02. When task 02 lands, document here:
-the chosen stack, and the `dev` / `build` / `preview` / `lint` / `test`
-commands (including how to run a single test).
+Vite 8 + React 19 + TypeScript (strict) · Biome (lint + format) · Vitest.
+`vite.config.ts` uses `base: "./"` so the build works on any static host or
+subpath — keep it that way.
+
+```sh
+npm run dev        # dev server
+npm run build      # type-check (tsc -b) + production build to dist/
+npm run preview    # serve the production build locally
+npm run lint       # biome check .
+npm run lint:fix   # biome check --write .
+npm test           # run all tests once (vitest run)
+npm run test:watch # watch mode
+```
+
+Run a single test file: `npx vitest run src/lib/formats.test.ts`
+Run tests matching a name: `npx vitest run -t "German labels"`
+
+CI (`.github/workflows/deploy.yml`) runs lint + test + build and deploys
+`dist/` to GitHub Pages on every push to `main`.
