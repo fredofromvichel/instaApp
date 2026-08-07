@@ -1,7 +1,8 @@
-import { POST_FORMATS } from "./lib/formats";
+import { EngineDemo } from "./demo/EngineDemo";
 
 /**
- * Placeholder start screen (task 02). The real wizard UI arrives with task 04.
+ * Placeholder shell (task 02) hosting the engine demo (task 03).
+ * The real wizard UI arrives with task 04.
  */
 export function App() {
   return (
@@ -10,10 +11,8 @@ export function App() {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "center",
-        minHeight: "80dvh",
-        gap: "0.75rem",
-        padding: "1.5rem",
+        gap: "0.5rem",
+        padding: "1.5rem 0.5rem",
         textAlign: "center",
       }}
     >
@@ -21,12 +20,7 @@ export function App() {
       <p style={{ margin: 0, maxWidth: "28rem" }}>
         Gestalte schöne Instagram-Posts – ganz einfach auf deinem Handy.
       </p>
-      <p style={{ margin: 0, color: "#8a7f70" }}>
-        Die App ist noch im Aufbau. Bald kannst du hier loslegen!
-      </p>
-      <p style={{ margin: 0, color: "#8a7f70", fontSize: "0.875rem" }}>
-        Formate: {POST_FORMATS.map((f) => f.label).join(" · ")}
-      </p>
+      <EngineDemo />
     </main>
   );
 }

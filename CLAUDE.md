@@ -55,3 +55,30 @@ Run tests matching a name: `npx vitest run -t "German labels"`
 
 CI (`.github/workflows/deploy.yml`) runs lint + test + build and deploys
 `dist/` to GitHub Pages on every push to `main`.
+
+## Architecture: the render engine (task 03)
+
+`src/engine/` is the keystone everything builds on. Three separate inputs
+feed one pure render path:
+
+- **Template** (`src/engine/types.ts`, instances in `src/templates/`):
+  declarative design — slots with explicit per-format frames
+  (square/portrait/story, 1080-based pixels), palettes referenced by
+  semantic color roles, guardrails per slot. Draw order = slot array order.
+- **Values**: user content keyed by slot id (text / photo+crop / qr / logo
+  images). Missing required text falls back to the slot's German `example`.
+- **Adjustments**: the user's light repositioning, always clamped through
+  `clampAdjustment` against the slot's guardrails (default: `LOCKED`).
+
+Rules that must not be broken:
+
+- Preview and export share `renderPost` at full target resolution; previews
+  are scaled with CSS only. Never render at preview resolution.
+- All interaction math (cover-crop panning, adjustment clamping, text
+  auto-fit) lives in the pure modules `src/engine/geometry.ts` /
+  `src/engine/text.ts` with injected measurement — keep them
+  canvas-free and unit-tested; gestures (tasks 05/08) must reuse them.
+- Text can never overflow a frame: `autoFitText` shrinks within the font's
+  min/max and truncates with an ellipsis + `overflow` flag at worst.
+- Slots never hold concrete colors — only `ColorRole` references into the
+  active palette.
