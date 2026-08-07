@@ -59,6 +59,10 @@ export type WizardAction =
   | { type: "choosePalette"; paletteId: string }
   | { type: "setValue"; slotId: string; value: SlotValue | null }
   | { type: "setAdjustment"; slotId: string; adjustment: SlotAdjustment | null }
+  | {
+      type: "setAllAdjustments";
+      adjustments: Record<string, SlotAdjustment>;
+    }
   | { type: "restart" }
   | { type: "restore"; state: WizardState };
 
@@ -104,6 +108,8 @@ export function wizardReducer(
       else adjustments[action.slotId] = action.adjustment;
       return { ...state, adjustments };
     }
+    case "setAllAdjustments":
+      return { ...state, adjustments: action.adjustments };
     case "restart":
       return initialWizardState;
     case "restore":

@@ -4,9 +4,10 @@
  */
 import "./app.css";
 import { STEP_TITLES, STEPS, useWizard, WizardProvider } from "./state/wizard";
+import { AdjustStep } from "./steps/AdjustStep";
 import { ContentStep } from "./steps/ContentStep";
 import { FormatStep } from "./steps/FormatStep";
-import { AdjustStep, DownloadStep } from "./steps/PlaceholderSteps";
+import { DownloadStep } from "./steps/PlaceholderSteps";
 import { TemplateStep } from "./steps/TemplateStep";
 
 function stepContent(step: (typeof STEPS)[number]) {

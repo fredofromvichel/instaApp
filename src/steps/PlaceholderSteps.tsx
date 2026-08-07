@@ -38,12 +38,6 @@ function PreviewPanel({ hint }: { hint: string }) {
   );
 }
 
-export function AdjustStep() {
-  return (
-    <PreviewPanel hint="Hier kannst du bald Farben wechseln und Elemente verschieben." />
-  );
-}
-
 export function DownloadStep() {
   return (
     <PreviewPanel hint="Hier kannst du dein Bild bald speichern und teilen." />
