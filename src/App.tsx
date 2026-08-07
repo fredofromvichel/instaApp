@@ -3,6 +3,13 @@
  * the current step, and the bottom action bar (one primary action).
  */
 import "./app.css";
+import { useEffect } from "react";
+import { Onboarding } from "./components/Onboarding";
+import {
+  deserializeState,
+  listDrafts,
+  setCurrentDraftId,
+} from "./lib/draftStore";
 import { useAutosave } from "./lib/useAutosave";
 import { BrandProvider, useBrand } from "./state/brand";
 import { STEP_TITLES, STEPS, useWizard, WizardProvider } from "./state/wizard";
@@ -32,6 +39,22 @@ function Wizard() {
   const { kit } = useBrand();
   const storageError = useAutosave(state, kit);
   const stepIndex = STEPS.indexOf(state.step);
+
+  // A reload mid-flow resumes the draft this browser session worked on.
+  useEffect(() => {
+    const sessionDraftId = sessionStorage.getItem("insta-studio-session-draft");
+    if (!sessionDraftId) return;
+    void listDrafts()
+      .then(async (drafts) => {
+        const draft = drafts.find((d) => d.id === sessionDraftId);
+        if (!draft) return;
+        const restored = await deserializeState(draft.state);
+        setCurrentDraftId(draft.id);
+        dispatch({ type: "restore", state: restored });
+      })
+      .catch(() => undefined);
+    // Mount-only: restore exactly once per page load.
+  }, [dispatch]);
 
   const canContinue =
     state.step === "format"
@@ -68,7 +91,7 @@ function Wizard() {
           />
         ))}
       </div>
-      <main className="step-main">
+      <main className="step-main step-enter" key={state.step}>
         {storageError && (
           <p className="field-hint" role="alert" style={{ color: "#b3402a" }}>
             Der Speicher deines Handys ist voll – dein Entwurf kann gerade nicht
@@ -98,6 +121,7 @@ export function App() {
     <BrandProvider>
       <WizardProvider>
         <Wizard />
+        <Onboarding />
       </WizardProvider>
     </BrandProvider>
   );

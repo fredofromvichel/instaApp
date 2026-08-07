@@ -42,8 +42,12 @@ export function useAutosave(state: WizardState, kit: BrandKit): boolean {
     const handle = window.setTimeout(() => {
       void (async () => {
         try {
+          const id = getCurrentDraftId();
           const thumbnail = await makeThumbnail(state, kit);
-          await saveDraft(getCurrentDraftId(), state, thumbnail);
+          await saveDraft(id, state, thumbnail);
+          // Refresh-safety (task 14): remember which draft this browser
+          // session is working on so a reload can resume it seamlessly.
+          sessionStorage.setItem("insta-studio-session-draft", id);
           setStorageError(false);
         } catch {
           setStorageError(true);

@@ -490,6 +490,55 @@
   cursor: pointer;
 }
 
+/* ---------------------------------------------------------- onboarding */
+
+.onboarding-list {
+  margin: 0;
+  padding: 0 0 0 4px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-weight: 600;
+}
+
+.onboarding-list span {
+  margin-right: 10px;
+}
+
+/* --------------------------------------------------- step transitions */
+
+.step-enter {
+  animation: step-in 0.22s ease-out;
+}
+
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-enter {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------- focus */
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+label:focus-within {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* --------------------------------------------------------- empty state */
 
 .empty-state {
