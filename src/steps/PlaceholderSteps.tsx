@@ -38,12 +38,6 @@ function PreviewPanel({ hint }: { hint: string }) {
   );
 }
 
-export function ContentStep() {
-  return (
-    <PreviewPanel hint="Hier kannst du bald dein Foto und deine Texte einsetzen." />
-  );
-}
-
 export function AdjustStep() {
   return (
     <PreviewPanel hint="Hier kannst du bald Farben wechseln und Elemente verschieben." />
