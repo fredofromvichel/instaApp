@@ -118,8 +118,9 @@ Slot frames then live in an N× wide coordinate space and each exported image
 is one 1080-wide window into it, so a panorama photo (e.g. a very long dog)
 and background gradients continue seamlessly across the swipe. Preview shows
 all slides side by side; export saves/shares one PNG per slide, numbered in
-swipe order. Guardrail model is unchanged (v1 carousel layout is locked;
-photo pan/zoom works as everywhere).
+swipe order. The guardrail model is unchanged: slots may declare guardrails
+as usual and the Anpassen step maps taps/outlines across the per-slide
+preview canvases; photo pan/zoom works as everywhere.
 
 ## 7. Technical constraints
 
@@ -161,6 +162,9 @@ photo pan/zoom works as everywhere).
 - **Size buttons:** the Anpassen step offers "− Kleiner / + Größer" buttons
   for the selected adjustable element as an easier alternative to two-finger
   pinch; both paths go through the same `clampAdjustment` guardrails.
+- **Schema extension `badge.opacity`:** text badges may declare a fill
+  opacity (text stays opaque) — used for overlay chips on photos, e.g. the
+  carousel swipe hint.
 - **Schema extension `slides`:** carousel templates declare
   `slides: N`; the engine renders slide k by shifting the N×-wide slot space
   by k·width (see §6 "Carousel templates"). First instance:

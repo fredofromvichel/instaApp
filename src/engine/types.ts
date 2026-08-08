@@ -153,6 +153,8 @@ export interface TextSlot extends SlotBase {
     paddingX: number;
     paddingY: number;
     cornerRadius: number;
+    /** Badge fill opacity (0..1, default 1) — the text stays opaque. */
+    opacity?: number;
   };
   /**
    * Fixed decorative text (captions, eyebrows like "STECKBRIEF"): always

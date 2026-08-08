@@ -782,8 +782,8 @@ const hundBanner: Template = {
  * Carousel template (2 swipe slides): one continuous panorama photo across
  * both images — slide 1 shows the front of the (long) dog, swiping reveals
  * the rest. Frames live in the doubled 2160-wide coordinate space; slide 1
- * covers x 0–1080, slide 2 covers x 1080–2160. Layout is locked (no
- * guardrails) — the photo is still fully pannable/zoomable in "Inhalte".
+ * covers x 0–1080, slide 2 covers x 1080–2160. Texts, hint, QR and logo are
+ * lightly adjustable; the photo is pannable/zoomable in "Inhalte".
  */
 const hundKarussell: Template = {
   id: "hund-karussell",
@@ -862,6 +862,12 @@ const hundKarussell: Template = {
       maxLines: 1,
       maxChars: 16,
       example: "Waldemar",
+      guardrails: {
+        maxOffsetX: 40,
+        maxOffsetY: 30,
+        minScale: 0.85,
+        maxScale: 1.2,
+      },
       frames: {
         square: { x: 64, y: 846, w: 860, h: 122 },
         portrait: { x: 64, y: 1110, w: 860, h: 130 },
@@ -887,6 +893,12 @@ const hundKarussell: Template = {
       maxLines: 1,
       maxChars: 45,
       example: "Der längste Dackel der Stadt",
+      guardrails: {
+        maxOffsetX: 40,
+        maxOffsetY: 24,
+        minScale: 0.85,
+        maxScale: 1.2,
+      },
       frames: {
         square: { x: 64, y: 976, w: 860, h: 44 },
         portrait: { x: 64, y: 1248, w: 860, h: 44 },
@@ -915,8 +927,16 @@ const hundKarussell: Template = {
         paddingX: 26,
         paddingY: 14,
         cornerRadius: 999,
+        // Semi-transparent so the dog stays visible behind the hint.
+        opacity: 0.72,
       },
       example: "Weiter wischen ➜",
+      guardrails: {
+        maxOffsetX: 40,
+        maxOffsetY: 120,
+        minScale: 0.8,
+        maxScale: 1.15,
+      },
       frames: {
         square: { x: 580, y: 494, w: 420, h: 40 },
         portrait: { x: 580, y: 630, w: 420, h: 40 },
@@ -944,6 +964,12 @@ const hundKarussell: Template = {
       maxChars: 160,
       example:
         "… und hinten hört er noch lange nicht auf! Waldemar sucht ein Zuhause mit ganz viel Platz zum Strecken.",
+      guardrails: {
+        maxOffsetX: 40,
+        maxOffsetY: 40,
+        minScale: 0.85,
+        maxScale: 1.2,
+      },
       frames: {
         square: { x: 1144, y: 750, w: 820, h: 260 },
         portrait: { x: 1144, y: 1000, w: 820, h: 280 },
@@ -955,6 +981,12 @@ const hundKarussell: Template = {
       type: "qr",
       optional: true,
       cornerRadius: 16,
+      guardrails: {
+        maxOffsetX: 40,
+        maxOffsetY: 40,
+        minScale: 0.8,
+        maxScale: 1.2,
+      },
       frames: {
         square: { x: 1996, y: 916, w: 100, h: 100 },
         portrait: { x: 1996, y: 1186, w: 100, h: 100 },
@@ -965,6 +997,12 @@ const hundKarussell: Template = {
       id: "logo",
       type: "logo",
       optional: true,
+      guardrails: {
+        maxOffsetX: 40,
+        maxOffsetY: 40,
+        minScale: 0.8,
+        maxScale: 1.2,
+      },
       frames: {
         square: { x: 1956, y: 64, w: 140, h: 140 },
         portrait: { x: 1956, y: 64, w: 140, h: 140 },

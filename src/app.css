@@ -272,6 +272,11 @@
   min-width: 0;
 }
 
+/* Anpassen step on carousel templates: one stage per slide, side by side. */
+.adjust-preview {
+  gap: 6px;
+}
+
 /* -------------------------------------------------------------- fields */
 
 .field {
@@ -341,6 +346,19 @@
 
 .preview-stage canvas {
   display: block;
+}
+
+/* Carousel templates: cap each slide's stage at half the row. */
+.adjust-preview.is-carousel .preview-stage {
+  max-width: calc(50% - 3px);
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.adjust-preview.is-carousel .preview-stage canvas {
+  width: 100%;
+  height: auto;
+  max-height: none;
 }
 
 .slot-outline {

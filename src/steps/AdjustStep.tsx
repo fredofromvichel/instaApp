@@ -11,7 +11,7 @@ import { PostPreview } from "../components/PostPreview";
 import { clampAdjustment } from "../engine/geometry";
 import { effectiveFrame } from "../engine/render";
 import type { SlotAdjustment, Template } from "../engine/types";
-import { IDENTITY_ADJUSTMENT, LOCKED } from "../engine/types";
+import { IDENTITY_ADJUSTMENT, LOCKED, templateSlides } from "../engine/types";
 import { getFormat } from "../lib/formats";
 import { findAdjustableSlotAt } from "../lib/hitTest";
 import { brandPalettesFor, buildRenderInput } from "../lib/renderInput";
@@ -83,18 +83,31 @@ export function AdjustStep() {
   }
   const formatId = state.formatId;
   const format = getFormat(formatId);
+  const slides = templateSlides(template);
   const hasAdjustable = template.slots.some((slot) => slot.guardrails);
   const selectedSlot = template.slots.find((slot) => slot.id === selectedId);
 
-  /** Screen (CSS px) → canvas coordinates. */
+  /**
+   * Screen (CSS px) → canvas coordinates. Carousel previews show one canvas
+   * per slide side by side; the point maps into the slide-widened space
+   * (slide k adds k·width), so hit-testing works on the wide slot frames.
+   */
   function toCanvasPoint(clientX: number, clientY: number) {
-    const canvas = wrapperRef.current?.querySelector("canvas");
+    const canvases = [
+      ...(wrapperRef.current?.querySelectorAll("canvas") ?? []),
+    ].filter((c) => c.getBoundingClientRect().width > 0);
+    if (canvases.length === 0) return null;
+    const hit = canvases.findIndex((c) => {
+      const r = c.getBoundingClientRect();
+      return clientX >= r.left && clientX <= r.right;
+    });
+    const index = hit >= 0 ? hit : 0;
+    const canvas = canvases[index];
     if (!canvas) return null;
     const rect = canvas.getBoundingClientRect();
-    if (rect.width === 0) return null;
     const scale = canvas.width / rect.width;
     return {
-      x: (clientX - rect.left) * scale,
+      x: (clientX - rect.left) * scale + index * canvas.width,
       y: (clientY - rect.top) * scale,
       scale,
     };
@@ -243,37 +256,50 @@ export function AdjustStep() {
       )}
       <div
         ref={wrapperRef}
-        className="post-preview adjust-preview"
+        className={`post-preview adjust-preview ${slides > 1 ? "is-carousel" : ""}`}
         style={{ touchAction: "none" }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerEnd}
         onPointerCancel={onPointerEnd}
       >
-        <div className="preview-stage">
-          <PostPreview
-            input={buildRenderInput(state, template, kit)}
-            ariaLabel="Vorschau deines Posts"
-          />
-          {/* Dashed hints on adjustable elements; solid outline when selected. */}
-          {template.slots
-            .filter((slot) => slot.guardrails)
-            .map((slot) => {
-              const frame = effectiveFrame(slot, formatId, state.adjustments);
-              return (
-                <span
-                  key={slot.id}
-                  className={`slot-outline ${slot.id === selectedId ? "selected" : ""}`}
-                  style={{
-                    left: `${(frame.x / format.width) * 100}%`,
-                    top: `${(frame.y / format.height) * 100}%`,
-                    width: `${(frame.w / format.width) * 100}%`,
-                    height: `${(frame.h / format.height) * 100}%`,
-                  }}
-                />
-              );
-            })}
-        </div>
+        {Array.from({ length: slides }, (_, slide) => (
+          <div
+            className="preview-stage"
+            // biome-ignore lint/suspicious/noArrayIndexKey: slide order is fixed — the index IS the slide's identity.
+            key={slide}
+          >
+            <PostPreview
+              input={{ ...buildRenderInput(state, template, kit), slide }}
+              ariaLabel={
+                slides === 1
+                  ? "Vorschau deines Posts"
+                  : `Vorschau Bild ${slide + 1} von ${slides}`
+              }
+            />
+            {/* Dashed hints on adjustable elements; solid outline when selected. */}
+            {template.slots
+              .filter((slot) => slot.guardrails)
+              .map((slot) => {
+                const frame = effectiveFrame(slot, formatId, state.adjustments);
+                // Skip outlines that lie entirely on another slide.
+                const left = frame.x - slide * format.width;
+                if (left + frame.w <= 0 || left >= format.width) return null;
+                return (
+                  <span
+                    key={slot.id}
+                    className={`slot-outline ${slot.id === selectedId ? "selected" : ""}`}
+                    style={{
+                      left: `${(left / format.width) * 100}%`,
+                      top: `${(frame.y / format.height) * 100}%`,
+                      width: `${(frame.w / format.width) * 100}%`,
+                      height: `${(frame.h / format.height) * 100}%`,
+                    }}
+                  />
+                );
+              })}
+          </div>
+        ))}
       </div>
       {canResize && rails && (
         <div className="button-row">

@@ -182,9 +182,12 @@ function drawText(
       w: badgeW,
       h: badgeH,
     };
+    ctx.save();
+    ctx.globalAlpha = slot.badge.opacity ?? 1;
     ctx.fillStyle = resolveFill(ctx, slot.badge.fill, palette, badgeFrame);
     pathRoundRect(ctx, badgeFrame, slot.badge.cornerRadius);
     ctx.fill();
+    ctx.restore();
   }
 
   ctx.fillStyle = palette.colors[slot.color];
