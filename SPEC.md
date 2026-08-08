@@ -84,6 +84,11 @@ Input is a **mix of fixed form fields and free text**:
   logo slot (any logo from the brand kit).
 - Layout must adapt gracefully to missing fields; empty slots collapse.
 
+### d) Team & Hinweise
+Practical everyday posts: introducing a (new) team member (photo hero, name,
+role, short text), opening hours (text-first card, one line per day), and a
+friendly "we're on a break" notice with a date badge.
+
 ## 6. Features
 
 ### QR codes
@@ -162,6 +167,16 @@ preview canvases; photo pan/zoom works as everywhere.
 - **Size buttons:** the Anpassen step offers "− Kleiner / + Größer" buttons
   for the selected adjustable element as an easier alternative to two-finger
   pinch; both paths go through the same `clampAdjustment` guardrails.
+- **Generous guardrail presets:** shared presets (`QR_RAILS`, `LOGO_RAILS`,
+  `TEXT_RAILS`, `BADGE_RAILS` in `src/templates/shared.ts`) make QR codes,
+  logos, badges and the main text slots adjustable in every template — QR up
+  to 1.8× for scannability. Text size adjustments scale the auto-fit font
+  range (and badge padding) with them, so "Größer" genuinely enlarges text
+  instead of stopping at the template's maxSize.
+- **Schema extension `variants`:** a template may declare curated style
+  variants ("Stil" toggle in Anpassen): per-slot decorative overrides
+  (cornerRadius, fill, hidden) that never change layout or guardrails. The
+  first variant is the default; the choice persists in drafts.
 - **Schema extension `badge.opacity`:** text badges may declare a fill
   opacity (text stays opaque) — used for overlay chips on photos, e.g. the
   carousel swipe hint.

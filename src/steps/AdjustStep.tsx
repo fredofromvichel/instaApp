@@ -26,6 +26,32 @@ interface GestureState {
   historyPushed: boolean;
 }
 
+function VariantChips({ template }: { template: Template }) {
+  const { state, dispatch } = useWizard();
+  const variants = template.variants ?? [];
+  if (variants.length < 2) return null;
+  const activeId = state.variantId ?? variants[0]?.id;
+  return (
+    <>
+      <h2 className="form-section-title">Stil</h2>
+      <div className="chip-row">
+        {variants.map((variant) => (
+          <button
+            key={variant.id}
+            type="button"
+            className={`chip ${variant.id === activeId ? "selected" : ""}`}
+            onClick={() =>
+              dispatch({ type: "chooseVariant", variantId: variant.id })
+            }
+          >
+            {variant.name}
+          </button>
+        ))}
+      </div>
+    </>
+  );
+}
+
 function PaletteChips({ template }: { template: Template }) {
   const { state, dispatch } = useWizard();
   const { kit } = useBrand();
@@ -242,6 +268,7 @@ export function AdjustStep() {
     <>
       <h2 className="form-section-title">Farben</h2>
       <PaletteChips template={template} />
+      <VariantChips template={template} />
       {hasAdjustable && (
         <>
           <h2 className="form-section-title">Feinschliff</h2>

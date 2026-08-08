@@ -37,6 +37,8 @@ export interface WizardState {
   templateId: string | null;
   /** null = template default (first palette). */
   paletteId: string | null;
+  /** null = template default (first style variant). */
+  variantId: string | null;
   values: Record<string, SlotValue>;
   adjustments: Record<string, SlotAdjustment>;
 }
@@ -46,6 +48,7 @@ export const initialWizardState: WizardState = {
   formatId: null,
   templateId: null,
   paletteId: null,
+  variantId: null,
   values: {},
   adjustments: {},
 };
@@ -57,6 +60,7 @@ export type WizardAction =
   | { type: "chooseFormat"; formatId: FormatId }
   | { type: "chooseTemplate"; templateId: string }
   | { type: "choosePalette"; paletteId: string }
+  | { type: "chooseVariant"; variantId: string }
   | { type: "setValue"; slotId: string; value: SlotValue | null }
   | { type: "setAdjustment"; slotId: string; adjustment: SlotAdjustment | null }
   | {
@@ -85,17 +89,20 @@ export function wizardReducer(
     case "chooseFormat":
       return { ...state, formatId: action.formatId };
     case "chooseTemplate":
-      // Switching templates invalidates palette + adjustments, but the
-      // photo (slot id "photo" by convention) survives the switch.
+      // Switching templates invalidates palette/variant + adjustments, but
+      // the photo (slot id "photo" by convention) survives the switch.
       if (action.templateId === state.templateId) return state;
       return {
         ...state,
         templateId: action.templateId,
         paletteId: null,
+        variantId: null,
         adjustments: {},
       };
     case "choosePalette":
       return { ...state, paletteId: action.paletteId };
+    case "chooseVariant":
+      return { ...state, variantId: action.variantId };
     case "setValue": {
       const values = { ...state.values };
       if (action.value === null) delete values[action.slotId];

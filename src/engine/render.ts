@@ -21,9 +21,15 @@ import type {
   QrSlot,
   RenderInput,
   Slot,
+  SlotVariantOverride,
   TextSlot,
 } from "./types";
-import { IDENTITY_ADJUSTMENT, LOCKED, templateSlides } from "./types";
+import {
+  activeVariant,
+  IDENTITY_ADJUSTMENT,
+  LOCKED,
+  templateSlides,
+} from "./types";
 
 export function resolvePalette(input: RenderInput): Palette {
   if (input.palette) return input.palette;
@@ -131,14 +137,20 @@ function drawText(
   frame: Frame,
   palette: Palette,
   text: string,
+  /**
+   * The user's size adjustment: scales the auto-fit range along with the
+   * frame, so "Größer" genuinely enlarges text instead of stopping at the
+   * template's maxSize.
+   */
+  fontScale = 1,
 ) {
   const content = slot.font.uppercase ? text.toUpperCase() : text;
   const { fontSize, lines } = autoFitText(content, {
     maxWidth: frame.w,
     maxHeight: frame.h,
     maxLines: slot.maxLines,
-    minSize: slot.font.minSize,
-    maxSize: slot.font.maxSize,
+    minSize: slot.font.minSize * fontScale,
+    maxSize: slot.font.maxSize * fontScale,
     lineHeight: slot.font.lineHeight,
     measure: (t, size) => {
       setFont(ctx, slot, size);
@@ -167,18 +179,20 @@ function drawText(
         : frame.x + frame.w;
 
   if (slot.badge) {
+    const paddingX = slot.badge.paddingX * fontScale;
+    const paddingY = slot.badge.paddingY * fontScale;
     const widest = Math.max(...lines.map((l) => ctx.measureText(l).width));
-    const badgeW = widest + 2 * slot.badge.paddingX;
-    const badgeH = blockHeight + 2 * slot.badge.paddingY;
+    const badgeW = widest + 2 * paddingX;
+    const badgeH = blockHeight + 2 * paddingY;
     const badgeX =
       align === "left"
-        ? anchorX - slot.badge.paddingX
+        ? anchorX - paddingX
         : align === "center"
           ? anchorX - badgeW / 2
-          : anchorX - badgeW + slot.badge.paddingX;
+          : anchorX - badgeW + paddingX;
     const badgeFrame: Frame = {
       x: badgeX,
-      y: blockTop - slot.badge.paddingY,
+      y: blockTop - paddingY,
       w: badgeW,
       h: badgeH,
     };
@@ -215,11 +229,12 @@ function drawPhoto(
   frame: Frame,
   input: RenderInput,
   palette: Palette,
+  cornerRadius: number,
 ) {
   const value = input.values[slot.id];
   if (value?.type !== "photo") {
     if (!slot.optional) {
-      drawPhotoPlaceholder(ctx, frame, palette, slot.cornerRadius ?? 0);
+      drawPhotoPlaceholder(ctx, frame, palette, cornerRadius);
     }
     return;
   }
@@ -231,7 +246,7 @@ function drawPhoto(
     value.crop,
   );
   ctx.save();
-  pathRoundRect(ctx, frame, slot.cornerRadius ?? 0);
+  pathRoundRect(ctx, frame, cornerRadius);
   ctx.clip();
   ctx.drawImage(
     value.source,
@@ -252,13 +267,14 @@ function drawContainedImage(
   slot: QrSlot | (Slot & { type: "logo" }),
   frame: Frame,
   input: RenderInput,
+  cornerRadius: number,
 ) {
   const value = input.values[slot.id];
   if (value?.type !== "image") return;
   const target = containFit(value.width, value.height, frame);
   ctx.save();
-  if (slot.type === "qr" && (slot.cornerRadius ?? 0) > 0) {
-    pathRoundRect(ctx, target, slot.cornerRadius ?? 0);
+  if (slot.type === "qr" && cornerRadius > 0) {
+    pathRoundRect(ctx, target, cornerRadius);
     ctx.clip();
   }
   ctx.drawImage(value.source, target.x, target.y, target.w, target.h);
@@ -305,7 +321,12 @@ export async function renderPost(
   // Setting canvas.width above reset the transform, so this never stacks.
   ctx.translate(-slide * format.width, 0);
 
+  const variant = activeVariant(input.template, input.variantId);
+
   for (const slot of input.template.slots) {
+    const override: SlotVariantOverride | undefined =
+      variant?.overrides[slot.id];
+    if (override?.hidden) continue;
     const frame = effectiveFrame(slot, input.formatId, input.adjustments);
     switch (slot.type) {
       case "background": {
@@ -315,12 +336,14 @@ export async function renderPost(
           w: format.width * slides,
           h: format.height,
         };
-        ctx.fillStyle = resolveFill(ctx, slot.fill, palette, full);
+        const fill = override?.fill ?? slot.fill;
+        ctx.fillStyle = resolveFill(ctx, fill, palette, full);
         ctx.fillRect(full.x, full.y, full.w, full.h);
         break;
       }
       case "shape": {
-        ctx.fillStyle = resolveFill(ctx, slot.fill, palette, frame);
+        const fill = override?.fill ?? slot.fill;
+        ctx.fillStyle = resolveFill(ctx, fill, palette, frame);
         if (slot.shape === "ellipse") {
           ctx.beginPath();
           ctx.ellipse(
@@ -333,13 +356,24 @@ export async function renderPost(
             Math.PI * 2,
           );
         } else {
-          pathRoundRect(ctx, frame, slot.cornerRadius ?? 0);
+          pathRoundRect(
+            ctx,
+            frame,
+            override?.cornerRadius ?? slot.cornerRadius ?? 0,
+          );
         }
         ctx.fill();
         break;
       }
       case "photo":
-        drawPhoto(ctx, slot, frame, input, palette);
+        drawPhoto(
+          ctx,
+          slot,
+          frame,
+          input,
+          palette,
+          override?.cornerRadius ?? slot.cornerRadius ?? 0,
+        );
         break;
       case "text": {
         if (
@@ -357,12 +391,25 @@ export async function renderPost(
             : slot.optional && !input.previewExamples
               ? ""
               : slot.example;
-        if (text.trim() !== "") drawText(ctx, slot, frame, palette, text);
+        if (text.trim() !== "") {
+          const adjustment = clampAdjustment(
+            input.adjustments?.[slot.id] ?? IDENTITY_ADJUSTMENT,
+            slot.guardrails ?? LOCKED,
+          );
+          drawText(ctx, slot, frame, palette, text, adjustment.scale);
+        }
         break;
       }
       case "qr":
       case "logo":
-        drawContainedImage(ctx, slot, frame, input);
+        drawContainedImage(
+          ctx,
+          slot,
+          frame,
+          input,
+          override?.cornerRadius ??
+            (slot.type === "qr" ? (slot.cornerRadius ?? 0) : 0),
+        );
         break;
     }
   }

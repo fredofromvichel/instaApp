@@ -44,11 +44,16 @@ dir gefällt. Keine Sorge: Farben und Texte änderst du gleich noch.
 ## Schritt 4: Anpassen 🎨
 
 - **Farben:** Tippe auf eine der Farbwelten – das ganze Design färbt sich
-  passend um.
-- **Feinschliff:** Manche Elemente haben einen gestrichelten Rahmen. Tippe
-  eines an und verschiebe es mit dem Finger. Die Größe änderst du ganz
-  einfach mit den Knöpfen **„− Kleiner“** und **„+ Größer“** (oder mit zwei
-  Fingern). Mit **„Zurücksetzen“** kommt alles wieder an seinen Platz.
+  passend um. Es gibt auch saisonale Farbwelten wie **Weihnachten** oder
+  **Sommer**.
+- **Stil:** Viele Vorlagen haben zwei Looks (z. B. „Abgerundet“ und
+  „Kantig“) – einfach antippen und vergleichen.
+- **Feinschliff:** Texte, Preise, QR-Code und Logo haben einen gestrichelten
+  Rahmen. Tippe ein Element an und verschiebe es mit dem Finger. Die Größe
+  änderst du mit den Knöpfen **„− Kleiner“** und **„+ Größer“** (oder mit
+  zwei Fingern) – den QR-Code kannst du z. B. deutlich größer machen, damit
+  er leichter zu scannen ist. Mit **„Zurücksetzen“** kommt alles wieder an
+  seinen Platz.
 
 ## Schritt 5: Speichern 💾
 
@@ -67,6 +72,9 @@ gespeichertes Bild aus. Fertig! 🎉
   deine Follower wischen dann von vorne nach hinten. 🐕
 
 ## Gut zu wissen
+
+- **Neue Kategorie „Team & Hinweise“:** Vorlagen, um neue Teammitglieder
+  vorzustellen, deine Öffnungszeiten zu posten oder eine Pause anzukündigen.
 
 - **Entwürfe:** Die App speichert automatisch, woran du gerade arbeitest.
   Auf dem Startbildschirm findest du unter **„Deine Entwürfe“** deine

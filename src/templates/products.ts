@@ -3,7 +3,15 @@
  * layouts in all three formats, five curated palettes.
  */
 import type { Palette, Template } from "../engine/types";
-import { FULL_FRAMES, SANS, SERIF } from "./shared";
+import {
+  BADGE_RAILS,
+  FULL_FRAMES,
+  LOGO_RAILS,
+  QR_RAILS,
+  SANS,
+  SERIF,
+  TEXT_RAILS,
+} from "./shared";
 
 const PRODUCT_PALETTES: Palette[] = [
   {
@@ -66,6 +74,42 @@ const PRODUCT_PALETTES: Palette[] = [
       muted: "#8d7583",
     },
   },
+  {
+    id: "weihnachten",
+    name: "Weihnachten",
+    colors: {
+      background: "#f7efe6",
+      surface: "#ffffff",
+      accent: "#9e2b2b",
+      text: "#2d1c18",
+      textOnAccent: "#fdf3ec",
+      muted: "#97806f",
+    },
+  },
+  {
+    id: "sommer",
+    name: "Sommer",
+    colors: {
+      background: "#eaf4f2",
+      surface: "#ffffff",
+      accent: "#e0763a",
+      text: "#23302e",
+      textOnAccent: "#fff4ea",
+      muted: "#74908a",
+    },
+  },
+  {
+    id: "edel",
+    name: "Schwarz & Gold",
+    colors: {
+      background: "#232019",
+      surface: "#2e2a21",
+      accent: "#d4af5a",
+      text: "#f1ece0",
+      textOnAccent: "#2b2210",
+      muted: "#a49a86",
+    },
+  },
 ];
 
 /** Photo top, white panel with headline / description / price. */
@@ -74,6 +118,10 @@ const produktKlassik: Template = {
   name: "Klassik",
   category: "products",
   palettes: PRODUCT_PALETTES,
+  variants: [
+    { id: "weich", name: "Abgerundet", overrides: {} },
+    { id: "kantig", name: "Kantig", overrides: { panel: { cornerRadius: 0 } } },
+  ],
   slots: [
     {
       id: "bg",
@@ -120,6 +168,7 @@ const produktKlassik: Template = {
       maxLines: 2,
       maxChars: 60,
       example: "Frisch gebackenes Sauerteigbrot",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 64, y: 620, w: 952, h: 170 },
         portrait: { x: 64, y: 820, w: 952, h: 180 },
@@ -146,6 +195,7 @@ const produktKlassik: Template = {
       maxChars: 140,
       example:
         "Jeden Samstag ab 8 Uhr im Hofladen – solange der Vorrat reicht.",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 64, y: 830, w: 600, h: 150 },
         portrait: { x: 64, y: 1040, w: 620, h: 170 },
@@ -176,12 +226,7 @@ const produktKlassik: Template = {
         cornerRadius: 999,
       },
       example: "4,50 €",
-      guardrails: {
-        maxOffsetX: 60,
-        maxOffsetY: 60,
-        minScale: 0.85,
-        maxScale: 1.25,
-      },
+      guardrails: BADGE_RAILS,
       frames: {
         square: { x: 740, y: 830, w: 276, h: 110 },
         portrait: { x: 740, y: 1040, w: 276, h: 110 },
@@ -192,6 +237,7 @@ const produktKlassik: Template = {
       id: "qr",
       type: "qr",
       optional: true,
+      guardrails: QR_RAILS,
       frames: {
         square: { x: 920, y: 952, w: 96, h: 96 },
         portrait: { x: 920, y: 1192, w: 96, h: 96 },
@@ -202,12 +248,7 @@ const produktKlassik: Template = {
       id: "logo",
       type: "logo",
       optional: true,
-      guardrails: {
-        maxOffsetX: 40,
-        maxOffsetY: 40,
-        minScale: 0.8,
-        maxScale: 1.2,
-      },
+      guardrails: LOGO_RAILS,
       frames: {
         square: { x: 48, y: 48, w: 120, h: 120 },
         portrait: { x: 48, y: 48, w: 120, h: 120 },
@@ -223,6 +264,23 @@ const produktVollbild: Template = {
   name: "Vollbild",
   category: "products",
   palettes: PRODUCT_PALETTES,
+  variants: [
+    { id: "kraeftig", name: "Kräftiger Verlauf", overrides: {} },
+    {
+      id: "dezent",
+      name: "Dezenter Verlauf",
+      overrides: {
+        scrim: {
+          fill: {
+            type: "scrim",
+            role: "text",
+            direction: "down",
+            opacity: 0.55,
+          },
+        },
+      },
+    },
+  ],
   slots: [
     { id: "photo", type: "photo", frames: FULL_FRAMES },
     {
@@ -257,6 +315,7 @@ const produktVollbild: Template = {
       maxLines: 1,
       maxChars: 30,
       example: "Angebot der Woche",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 64, y: 560, w: 850, h: 44 },
         portrait: { x: 64, y: 790, w: 850, h: 44 },
@@ -281,6 +340,7 @@ const produktVollbild: Template = {
       maxLines: 3,
       maxChars: 70,
       example: "Handgemachte Keramik",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 64, y: 620, w: 800, h: 260 },
         portrait: { x: 64, y: 850, w: 820, h: 280 },
@@ -312,12 +372,7 @@ const produktVollbild: Template = {
         cornerRadius: 999,
       },
       example: "ab 24 €",
-      guardrails: {
-        maxOffsetX: 80,
-        maxOffsetY: 50,
-        minScale: 0.85,
-        maxScale: 1.25,
-      },
+      guardrails: BADGE_RAILS,
       frames: {
         square: { x: 64, y: 920, w: 250, h: 100 },
         portrait: { x: 64, y: 1170, w: 250, h: 100 },
@@ -328,6 +383,7 @@ const produktVollbild: Template = {
       id: "qr",
       type: "qr",
       optional: true,
+      guardrails: QR_RAILS,
       frames: {
         square: { x: 920, y: 920, w: 100, h: 100 },
         portrait: { x: 920, y: 1180, w: 100, h: 100 },
@@ -338,12 +394,7 @@ const produktVollbild: Template = {
       id: "logo",
       type: "logo",
       optional: true,
-      guardrails: {
-        maxOffsetX: 40,
-        maxOffsetY: 40,
-        minScale: 0.8,
-        maxScale: 1.2,
-      },
+      guardrails: LOGO_RAILS,
       frames: {
         square: { x: 48, y: 48, w: 120, h: 120 },
         portrait: { x: 48, y: 48, w: 120, h: 120 },
@@ -359,6 +410,14 @@ const produktRahmen: Template = {
   name: "Galerie",
   category: "products",
   palettes: PRODUCT_PALETTES,
+  variants: [
+    { id: "galerie", name: "Klassisch", overrides: {} },
+    {
+      id: "rund",
+      name: "Runde Ecken",
+      overrides: { photo: { cornerRadius: 48 } },
+    },
+  ],
   slots: [
     {
       id: "bg",
@@ -397,6 +456,7 @@ const produktRahmen: Template = {
       maxLines: 1,
       maxChars: 30,
       example: "Neu eingetroffen",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 104, y: 726, w: 872, h: 40 },
         portrait: { x: 104, y: 950, w: 872, h: 40 },
@@ -421,6 +481,7 @@ const produktRahmen: Template = {
       maxLines: 2,
       maxChars: 50,
       example: "Vase „Landliebe“",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 104, y: 780, w: 872, h: 150 },
         portrait: { x: 104, y: 1004, w: 872, h: 160 },
@@ -446,12 +507,7 @@ const produktRahmen: Template = {
       maxLines: 1,
       maxChars: 14,
       example: "39 €",
-      guardrails: {
-        maxOffsetX: 40,
-        maxOffsetY: 30,
-        minScale: 0.85,
-        maxScale: 1.2,
-      },
+      guardrails: BADGE_RAILS,
       frames: {
         square: { x: 340, y: 940, w: 400, h: 56 },
         portrait: { x: 340, y: 1170, w: 400, h: 56 },
@@ -479,6 +535,7 @@ const produktRahmen: Template = {
       maxChars: 100,
       example:
         "Jedes Stück ein Unikat – gedreht und glasiert in unserer Werkstatt.",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 144, y: 1004, w: 792, h: 70 },
         portrait: { x: 144, y: 1234, w: 792, h: 80 },
@@ -494,6 +551,10 @@ const produktFarbblock: Template = {
   name: "Farbblock",
   category: "products",
   palettes: PRODUCT_PALETTES,
+  variants: [
+    { id: "weich", name: "Abgerundet", overrides: {} },
+    { id: "kantig", name: "Kantig", overrides: { photo: { cornerRadius: 0 } } },
+  ],
   slots: [
     {
       id: "bg",
@@ -519,6 +580,7 @@ const produktFarbblock: Template = {
       maxLines: 2,
       maxChars: 55,
       example: "Wochenend-Rabatt: 20 % auf alles",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 64, y: 88, w: 780, h: 230 },
         portrait: { x: 64, y: 104, w: 780, h: 270 },
@@ -544,6 +606,7 @@ const produktFarbblock: Template = {
       maxLines: 2,
       maxChars: 90,
       example: "Nur Samstag und Sonntag – im Laden und online.",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 64, y: 336, w: 850, h: 84 },
         portrait: { x: 64, y: 396, w: 850, h: 90 },
@@ -585,12 +648,7 @@ const produktFarbblock: Template = {
         cornerRadius: 20,
       },
       example: "Code: WOCHENENDE",
-      guardrails: {
-        maxOffsetX: 70,
-        maxOffsetY: 60,
-        minScale: 0.85,
-        maxScale: 1.25,
-      },
+      guardrails: BADGE_RAILS,
       frames: {
         square: { x: 620, y: 510, w: 350, h: 96 },
         portrait: { x: 620, y: 590, w: 350, h: 96 },
@@ -602,6 +660,7 @@ const produktFarbblock: Template = {
       type: "qr",
       optional: true,
       cornerRadius: 16,
+      guardrails: QR_RAILS,
       frames: {
         square: { x: 112, y: 872, w: 100, h: 100 },
         portrait: { x: 112, y: 1142, w: 100, h: 100 },
@@ -612,12 +671,7 @@ const produktFarbblock: Template = {
       id: "logo",
       type: "logo",
       optional: true,
-      guardrails: {
-        maxOffsetX: 40,
-        maxOffsetY: 40,
-        minScale: 0.8,
-        maxScale: 1.2,
-      },
+      guardrails: LOGO_RAILS,
       frames: {
         square: { x: 896, y: 96, w: 120, h: 120 },
         portrait: { x: 896, y: 112, w: 120, h: 120 },

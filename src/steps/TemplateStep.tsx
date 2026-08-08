@@ -14,7 +14,8 @@ export function TemplateStep() {
   const [category, setCategory] = useState<TemplateCategory>(() => {
     if (import.meta.env.DEV) {
       const param = new URLSearchParams(window.location.search).get("category");
-      if (param === "quotes" || param === "dogs") return param;
+      if (param === "quotes" || param === "dogs" || param === "team")
+        return param;
     }
     return "products";
   });

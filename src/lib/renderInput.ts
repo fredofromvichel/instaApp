@@ -32,6 +32,7 @@ export function buildRenderInput(
     formatId: state.formatId ?? "square",
     paletteId: state.paletteId ?? undefined,
     palette,
+    variantId: state.variantId ?? undefined,
     values: state.values,
     adjustments: state.adjustments,
   };

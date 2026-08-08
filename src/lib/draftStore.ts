@@ -43,6 +43,8 @@ interface StoredState {
   formatId: WizardState["formatId"];
   templateId: string | null;
   paletteId: string | null;
+  /** Optional for drafts saved before style variants existed. */
+  variantId?: string | null;
   values: Record<string, StoredValue>;
   adjustments: Record<string, SlotAdjustment>;
 }
@@ -138,6 +140,7 @@ export async function serializeState(state: WizardState): Promise<StoredState> {
     formatId: state.formatId,
     templateId: state.templateId,
     paletteId: state.paletteId,
+    variantId: state.variantId,
     values,
     adjustments: state.adjustments,
   };
@@ -155,6 +158,7 @@ export async function deserializeState(
     formatId: stored.formatId,
     templateId: stored.templateId,
     paletteId: stored.paletteId,
+    variantId: stored.variantId ?? null,
     values,
     adjustments: stored.adjustments ?? {},
   };

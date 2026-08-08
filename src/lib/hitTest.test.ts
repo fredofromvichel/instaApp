@@ -3,7 +3,7 @@ import { productTemplates } from "../templates/products";
 import { findAdjustableSlotAt } from "./hitTest";
 
 // "Klassik" template: the price slot declares guardrails
-// (square frame: x 740, y 830, w 276, h 110). The headline is locked.
+// (square frame: x 740, y 830, w 276, h 110). The photo area is locked.
 const template = productTemplates[0];
 if (!template) throw new Error("products set is empty");
 
@@ -21,8 +21,8 @@ describe("findAdjustableSlotAt", () => {
   });
 
   it("ignores locked elements", () => {
-    // Center of the (locked) headline: no adjustable hit.
-    expect(findAdjustableSlotAt(template, "square", {}, 400, 700)).toBeNull();
+    // Middle of the (locked) photo area: no adjustable hit.
+    expect(findAdjustableSlotAt(template, "square", {}, 540, 300)).toBeNull();
   });
 
   it("respects the element's current adjustment", () => {

@@ -5,7 +5,15 @@
  * free-text story, QR to the adoption page.
  */
 import type { Palette, Slot, Template } from "../engine/types";
-import { FULL_FRAMES, SANS, SERIF } from "./shared";
+import {
+  BADGE_RAILS,
+  FULL_FRAMES,
+  LOGO_RAILS,
+  QR_RAILS,
+  SANS,
+  SERIF,
+  TEXT_RAILS,
+} from "./shared";
 
 const DOG_PALETTES: Palette[] = [
   {
@@ -66,6 +74,30 @@ const DOG_PALETTES: Palette[] = [
       text: "#2d2513",
       textOnAccent: "#fff9ea",
       muted: "#97865c",
+    },
+  },
+  {
+    id: "weihnachten",
+    name: "Weihnachten",
+    colors: {
+      background: "#f6ece3",
+      surface: "#ffffff",
+      accent: "#a03434",
+      text: "#2d1c17",
+      textOnAccent: "#fdf2ea",
+      muted: "#98816e",
+    },
+  },
+  {
+    id: "winter",
+    name: "Winter",
+    colors: {
+      background: "#e9eff5",
+      surface: "#ffffff",
+      accent: "#38607e",
+      text: "#1c2933",
+      textOnAccent: "#edf5fb",
+      muted: "#74858f",
     },
   },
 ];
@@ -141,6 +173,7 @@ function factColumns(opts: {
       maxLines: 1,
       maxChars: 18,
       example: column.example,
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: column.x, y: opts.valueY.square, w: 280, h: 46 },
         portrait: { x: column.x, y: opts.valueY.portrait, w: 280, h: 46 },
@@ -156,6 +189,10 @@ const hundSteckbrief: Template = {
   name: "Steckbrief",
   category: "dogs",
   palettes: DOG_PALETTES,
+  variants: [
+    { id: "weich", name: "Abgerundet", overrides: {} },
+    { id: "kantig", name: "Kantig", overrides: { panel: { cornerRadius: 0 } } },
+  ],
   slots: [
     {
       id: "bg",
@@ -228,6 +265,7 @@ const hundSteckbrief: Template = {
       maxLines: 1,
       maxChars: 20,
       example: "Bello",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 64, y: 606, w: 850, h: 108 },
         portrait: { x: 64, y: 766, w: 850, h: 118 },
@@ -259,6 +297,7 @@ const hundSteckbrief: Template = {
       maxLines: 1,
       maxChars: 50,
       example: "verspielt · kinderlieb · leinenführig",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 64, y: 848, w: 850, h: 42 },
         portrait: { x: 64, y: 1020, w: 850, h: 42 },
@@ -286,6 +325,7 @@ const hundSteckbrief: Template = {
       maxChars: 220,
       example:
         "Ich bin ein fröhlicher Kerl, der Menschen liebt und gern Neues lernt. Ein Garten wäre mein großer Traum!",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 64, y: 910, w: 700, h: 150 },
         portrait: { x: 64, y: 1082, w: 700, h: 190 },
@@ -296,6 +336,7 @@ const hundSteckbrief: Template = {
       id: "qr",
       type: "qr",
       optional: true,
+      guardrails: QR_RAILS,
       frames: {
         square: { x: 866, y: 906, w: 120, h: 120 },
         portrait: { x: 866, y: 1082, w: 120, h: 120 },
@@ -331,12 +372,7 @@ const hundSteckbrief: Template = {
       id: "logo",
       type: "logo",
       optional: true,
-      guardrails: {
-        maxOffsetX: 40,
-        maxOffsetY: 40,
-        minScale: 0.8,
-        maxScale: 1.2,
-      },
+      guardrails: LOGO_RAILS,
       frames: {
         square: { x: 48, y: 48, w: 120, h: 120 },
         portrait: { x: 48, y: 48, w: 120, h: 120 },
@@ -352,6 +388,23 @@ const hundVollbild: Template = {
   name: "Herzensbrecher",
   category: "dogs",
   palettes: DOG_PALETTES,
+  variants: [
+    { id: "kraeftig", name: "Kräftiger Verlauf", overrides: {} },
+    {
+      id: "dezent",
+      name: "Dezenter Verlauf",
+      overrides: {
+        scrim: {
+          fill: {
+            type: "scrim",
+            role: "text",
+            direction: "down",
+            opacity: 0.6,
+          },
+        },
+      },
+    },
+  ],
   slots: [
     { id: "photo", type: "photo", frames: FULL_FRAMES },
     {
@@ -392,12 +445,7 @@ const hundVollbild: Template = {
         cornerRadius: 999,
       },
       example: "Ich suche ein Zuhause",
-      guardrails: {
-        maxOffsetX: 50,
-        maxOffsetY: 40,
-        minScale: 0.85,
-        maxScale: 1.2,
-      },
+      guardrails: BADGE_RAILS,
       frames: {
         square: { x: 88, y: 78, w: 560, h: 52 },
         portrait: { x: 88, y: 88, w: 560, h: 52 },
@@ -422,6 +470,7 @@ const hundVollbild: Template = {
       maxLines: 1,
       maxChars: 18,
       example: "Bello",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 64, y: 700, w: 850, h: 150 },
         portrait: { x: 64, y: 950, w: 850, h: 170 },
@@ -447,6 +496,7 @@ const hundVollbild: Template = {
       maxLines: 1,
       maxChars: 45,
       example: "3 Jahre · Mischling · Rüde",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 64, y: 872, w: 800, h: 48 },
         portrait: { x: 64, y: 1142, w: 800, h: 48 },
@@ -457,6 +507,7 @@ const hundVollbild: Template = {
       id: "qr",
       type: "qr",
       optional: true,
+      guardrails: QR_RAILS,
       frames: {
         square: { x: 920, y: 924, w: 96, h: 96 },
         portrait: { x: 920, y: 1194, w: 96, h: 96 },
@@ -467,12 +518,7 @@ const hundVollbild: Template = {
       id: "logo",
       type: "logo",
       optional: true,
-      guardrails: {
-        maxOffsetX: 40,
-        maxOffsetY: 40,
-        minScale: 0.8,
-        maxScale: 1.2,
-      },
+      guardrails: LOGO_RAILS,
       frames: {
         square: { x: 912, y: 64, w: 110, h: 110 },
         portrait: { x: 912, y: 76, w: 110, h: 110 },
@@ -488,6 +534,14 @@ const hundKarte: Template = {
   name: "Sammelkarte",
   category: "dogs",
   palettes: DOG_PALETTES,
+  variants: [
+    { id: "weich", name: "Abgerundet", overrides: {} },
+    {
+      id: "kantig",
+      name: "Kantig",
+      overrides: { card: { cornerRadius: 0 }, photo: { cornerRadius: 0 } },
+    },
+  ],
   slots: [
     {
       id: "bg",
@@ -535,6 +589,7 @@ const hundKarte: Template = {
       maxLines: 1,
       maxChars: 20,
       example: "Luna",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 144, y: 636, w: 792, h: 96 },
         portrait: { x: 144, y: 820, w: 792, h: 104 },
@@ -560,6 +615,7 @@ const hundKarte: Template = {
       maxLines: 1,
       maxChars: 45,
       example: "2 Jahre · Podenco-Mix · Hündin",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 144, y: 744, w: 792, h: 42 },
         portrait: { x: 144, y: 936, w: 792, h: 44 },
@@ -587,6 +643,7 @@ const hundKarte: Template = {
       maxChars: 220,
       example:
         "Ich bin anfangs etwas schüchtern – aber wer mein Herz gewinnt, hat eine Freundin fürs Leben.",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 144, y: 806, w: 792, h: 170 },
         portrait: { x: 144, y: 1000, w: 792, h: 230 },
@@ -597,12 +654,7 @@ const hundKarte: Template = {
       id: "logo",
       type: "logo",
       optional: true,
-      guardrails: {
-        maxOffsetX: 40,
-        maxOffsetY: 40,
-        minScale: 0.8,
-        maxScale: 1.2,
-      },
+      guardrails: LOGO_RAILS,
       frames: {
         square: { x: 880, y: 128, w: 110, h: 110 },
         portrait: { x: 880, y: 128, w: 110, h: 110 },
@@ -618,6 +670,10 @@ const hundBanner: Template = {
   name: "Warmherz",
   category: "dogs",
   palettes: DOG_PALETTES,
+  variants: [
+    { id: "weich", name: "Abgerundet", overrides: {} },
+    { id: "kantig", name: "Kantig", overrides: { panel: { cornerRadius: 0 } } },
+  ],
   slots: [
     {
       id: "photo",
@@ -684,6 +740,7 @@ const hundBanner: Template = {
       maxLines: 1,
       maxChars: 20,
       example: "Rocky",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 64, y: 646, w: 850, h: 108 },
         portrait: { x: 64, y: 826, w: 850, h: 118 },
@@ -717,6 +774,7 @@ const hundBanner: Template = {
       maxChars: 200,
       example:
         "Ein Senior mit Herz: Ich liebe gemütliche Spaziergänge und ausgiebige Streicheleinheiten.",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 64, y: 888, w: 700, h: 150 },
         portrait: { x: 64, y: 1070, w: 700, h: 190 },
@@ -728,6 +786,7 @@ const hundBanner: Template = {
       type: "qr",
       optional: true,
       cornerRadius: 16,
+      guardrails: QR_RAILS,
       frames: {
         square: { x: 866, y: 890, w: 120, h: 120 },
         portrait: { x: 866, y: 1072, w: 120, h: 120 },
@@ -763,12 +822,7 @@ const hundBanner: Template = {
       id: "logo",
       type: "logo",
       optional: true,
-      guardrails: {
-        maxOffsetX: 40,
-        maxOffsetY: 40,
-        minScale: 0.8,
-        maxScale: 1.2,
-      },
+      guardrails: LOGO_RAILS,
       frames: {
         square: { x: 48, y: 48, w: 120, h: 120 },
         portrait: { x: 48, y: 48, w: 120, h: 120 },
@@ -791,6 +845,23 @@ const hundKarussell: Template = {
   category: "dogs",
   slides: 2,
   palettes: DOG_PALETTES,
+  variants: [
+    { id: "kraeftig", name: "Kräftiger Verlauf", overrides: {} },
+    {
+      id: "dezent",
+      name: "Dezenter Verlauf",
+      overrides: {
+        scrim: {
+          fill: {
+            type: "scrim",
+            role: "text",
+            direction: "down",
+            opacity: 0.5,
+          },
+        },
+      },
+    },
+  ],
   slots: [
     {
       id: "bg",
@@ -862,12 +933,7 @@ const hundKarussell: Template = {
       maxLines: 1,
       maxChars: 16,
       example: "Waldemar",
-      guardrails: {
-        maxOffsetX: 40,
-        maxOffsetY: 30,
-        minScale: 0.85,
-        maxScale: 1.2,
-      },
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 64, y: 846, w: 860, h: 122 },
         portrait: { x: 64, y: 1110, w: 860, h: 130 },
@@ -893,12 +959,7 @@ const hundKarussell: Template = {
       maxLines: 1,
       maxChars: 45,
       example: "Der längste Dackel der Stadt",
-      guardrails: {
-        maxOffsetX: 40,
-        maxOffsetY: 24,
-        minScale: 0.85,
-        maxScale: 1.2,
-      },
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 64, y: 976, w: 860, h: 44 },
         portrait: { x: 64, y: 1248, w: 860, h: 44 },
@@ -932,10 +993,10 @@ const hundKarussell: Template = {
       },
       example: "Weiter wischen ➜",
       guardrails: {
-        maxOffsetX: 40,
-        maxOffsetY: 120,
+        maxOffsetX: 60,
+        maxOffsetY: 140,
         minScale: 0.8,
-        maxScale: 1.15,
+        maxScale: 1.3,
       },
       frames: {
         square: { x: 580, y: 494, w: 420, h: 40 },
@@ -964,12 +1025,7 @@ const hundKarussell: Template = {
       maxChars: 160,
       example:
         "… und hinten hört er noch lange nicht auf! Waldemar sucht ein Zuhause mit ganz viel Platz zum Strecken.",
-      guardrails: {
-        maxOffsetX: 40,
-        maxOffsetY: 40,
-        minScale: 0.85,
-        maxScale: 1.2,
-      },
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 1144, y: 750, w: 820, h: 260 },
         portrait: { x: 1144, y: 1000, w: 820, h: 280 },
@@ -981,12 +1037,7 @@ const hundKarussell: Template = {
       type: "qr",
       optional: true,
       cornerRadius: 16,
-      guardrails: {
-        maxOffsetX: 40,
-        maxOffsetY: 40,
-        minScale: 0.8,
-        maxScale: 1.2,
-      },
+      guardrails: QR_RAILS,
       frames: {
         square: { x: 1996, y: 916, w: 100, h: 100 },
         portrait: { x: 1996, y: 1186, w: 100, h: 100 },
@@ -997,12 +1048,7 @@ const hundKarussell: Template = {
       id: "logo",
       type: "logo",
       optional: true,
-      guardrails: {
-        maxOffsetX: 40,
-        maxOffsetY: 40,
-        minScale: 0.8,
-        maxScale: 1.2,
-      },
+      guardrails: LOGO_RAILS,
       frames: {
         square: { x: 1956, y: 64, w: 140, h: 140 },
         portrait: { x: 1956, y: 64, w: 140, h: 140 },

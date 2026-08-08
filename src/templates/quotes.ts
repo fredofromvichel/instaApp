@@ -4,7 +4,15 @@
  * Fraunces for the statement, Outfit for structure.
  */
 import type { Palette, Template } from "../engine/types";
-import { FULL_FRAMES, SANS, SERIF } from "./shared";
+import {
+  BADGE_RAILS,
+  FULL_FRAMES,
+  LOGO_RAILS,
+  QR_RAILS,
+  SANS,
+  SERIF,
+  TEXT_RAILS,
+} from "./shared";
 
 const QUOTE_PALETTES: Palette[] = [
   {
@@ -67,6 +75,30 @@ const QUOTE_PALETTES: Palette[] = [
       muted: "#6b838c",
     },
   },
+  {
+    id: "weihnachten",
+    name: "Weihnachten",
+    colors: {
+      background: "#f5ece4",
+      surface: "#ffffff",
+      accent: "#8f2f2f",
+      text: "#2c1b16",
+      textOnAccent: "#fcf1ea",
+      muted: "#97806f",
+    },
+  },
+  {
+    id: "flieder",
+    name: "Flieder",
+    colors: {
+      background: "#efeaf5",
+      surface: "#faf8fd",
+      accent: "#6b5397",
+      text: "#262033",
+      textOnAccent: "#f3eefb",
+      muted: "#8d84a0",
+    },
+  },
 ];
 
 /** Big centered serif quote with a decorative mark and author line. */
@@ -75,6 +107,10 @@ const zitatKlassisch: Template = {
   name: "Zitat",
   category: "quotes",
   palettes: QUOTE_PALETTES,
+  variants: [
+    { id: "klassisch", name: "Mit Zeichen", overrides: {} },
+    { id: "pur", name: "Pur", overrides: { mark: { hidden: true } } },
+  ],
   slots: [
     {
       id: "bg",
@@ -126,6 +162,7 @@ const zitatKlassisch: Template = {
       maxChars: 220,
       example:
         "Das Glück ist das einzige, das sich verdoppelt, wenn man es teilt.",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 104, y: 290, w: 872, h: 440 },
         portrait: { x: 104, y: 370, w: 872, h: 540 },
@@ -165,6 +202,7 @@ const zitatKlassisch: Template = {
       maxLines: 1,
       maxChars: 40,
       example: "Albert Schweitzer",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 190, y: 822, w: 700, h: 44 },
         portrait: { x: 190, y: 1002, w: 700, h: 44 },
@@ -175,12 +213,7 @@ const zitatKlassisch: Template = {
       id: "logo",
       type: "logo",
       optional: true,
-      guardrails: {
-        maxOffsetX: 40,
-        maxOffsetY: 40,
-        minScale: 0.8,
-        maxScale: 1.2,
-      },
+      guardrails: LOGO_RAILS,
       frames: {
         square: { x: 490, y: 930, w: 100, h: 100 },
         portrait: { x: 490, y: 1150, w: 100, h: 100 },
@@ -196,6 +229,10 @@ const tippKarte: Template = {
   name: "Tipp-Karte",
   category: "quotes",
   palettes: QUOTE_PALETTES,
+  variants: [
+    { id: "weich", name: "Abgerundet", overrides: {} },
+    { id: "kantig", name: "Kantig", overrides: { card: { cornerRadius: 0 } } },
+  ],
   slots: [
     {
       id: "bg",
@@ -241,6 +278,7 @@ const tippKarte: Template = {
         cornerRadius: 999,
       },
       example: "Tipp des Tages",
+      guardrails: BADGE_RAILS,
       frames: {
         square: { x: 154, y: 190, w: 500, h: 50 },
         portrait: { x: 154, y: 214, w: 500, h: 50 },
@@ -265,6 +303,7 @@ const tippKarte: Template = {
       maxLines: 3,
       maxChars: 80,
       example: "So bleibt dein Brot länger frisch",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 128, y: 290, w: 824, h: 190 },
         portrait: { x: 128, y: 320, w: 824, h: 210 },
@@ -291,6 +330,7 @@ const tippKarte: Template = {
       maxChars: 320,
       example:
         "Bewahre Brot nie im Kühlschrank auf – dort wird es schneller alt. Ein Brotkasten aus Ton oder ein Leinenbeutel hält die Kruste knusprig und die Krume saftig.",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 128, y: 500, w: 824, h: 300 },
         portrait: { x: 128, y: 550, w: 824, h: 480 },
@@ -301,6 +341,7 @@ const tippKarte: Template = {
       id: "qr",
       type: "qr",
       optional: true,
+      guardrails: QR_RAILS,
       frames: {
         square: { x: 856, y: 832, w: 96, h: 96 },
         portrait: { x: 856, y: 1082, w: 96, h: 96 },
@@ -311,12 +352,7 @@ const tippKarte: Template = {
       id: "logo",
       type: "logo",
       optional: true,
-      guardrails: {
-        maxOffsetX: 40,
-        maxOffsetY: 40,
-        minScale: 0.8,
-        maxScale: 1.2,
-      },
+      guardrails: LOGO_RAILS,
       frames: {
         square: { x: 128, y: 840, w: 90, h: 90 },
         portrait: { x: 128, y: 1090, w: 90, h: 90 },
@@ -332,6 +368,23 @@ const wusstestDu: Template = {
   name: "Wusstest du?",
   category: "quotes",
   palettes: QUOTE_PALETTES,
+  variants: [
+    { id: "flaeche", name: "Einfarbig", overrides: {} },
+    {
+      id: "verlauf",
+      name: "Verlauf",
+      overrides: {
+        bg: {
+          fill: {
+            type: "linear-gradient",
+            from: "accent",
+            to: "text",
+            angle: 24,
+          },
+        },
+      },
+    },
+  ],
   slots: [
     {
       id: "bg",
@@ -359,6 +412,7 @@ const wusstestDu: Template = {
       maxLines: 1,
       maxChars: 26,
       example: "Wusstest du?",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 140, y: 140, w: 800, h: 44 },
         portrait: { x: 140, y: 180, w: 800, h: 44 },
@@ -384,6 +438,7 @@ const wusstestDu: Template = {
       maxLines: 6,
       maxChars: 180,
       example: "Hunde können rund 250 Wörter und Gesten verstehen.",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 104, y: 250, w: 872, h: 540 },
         portrait: { x: 104, y: 310, w: 872, h: 680 },
@@ -409,6 +464,7 @@ const wusstestDu: Template = {
       maxLines: 2,
       maxChars: 80,
       example: "Quelle: Studie der Uni Wien",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 190, y: 830, w: 700, h: 70 },
         portrait: { x: 190, y: 1040, w: 700, h: 70 },
@@ -419,12 +475,7 @@ const wusstestDu: Template = {
       id: "logo",
       type: "logo",
       optional: true,
-      guardrails: {
-        maxOffsetX: 40,
-        maxOffsetY: 40,
-        minScale: 0.8,
-        maxScale: 1.2,
-      },
+      guardrails: LOGO_RAILS,
       frames: {
         square: { x: 490, y: 930, w: 100, h: 100 },
         portrait: { x: 490, y: 1160, w: 100, h: 100 },
@@ -440,6 +491,14 @@ const ankuendigung: Template = {
   name: "Ankündigung",
   category: "quotes",
   palettes: QUOTE_PALETTES,
+  variants: [
+    { id: "hell", name: "Zarter Grund", overrides: {} },
+    {
+      id: "weiss",
+      name: "Weißer Grund",
+      overrides: { bg: { fill: { type: "solid", role: "surface" } } },
+    },
+  ],
   slots: [
     {
       id: "bg",
@@ -451,12 +510,7 @@ const ankuendigung: Template = {
       id: "logo",
       type: "logo",
       optional: true,
-      guardrails: {
-        maxOffsetX: 40,
-        maxOffsetY: 30,
-        minScale: 0.8,
-        maxScale: 1.2,
-      },
+      guardrails: LOGO_RAILS,
       frames: {
         square: { x: 490, y: 72, w: 100, h: 100 },
         portrait: { x: 490, y: 96, w: 100, h: 100 },
@@ -484,6 +538,7 @@ const ankuendigung: Template = {
       maxLines: 1,
       maxChars: 30,
       example: "Nicht verpassen",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 140, y: 214, w: 800, h: 40 },
         portrait: { x: 140, y: 260, w: 800, h: 40 },
@@ -509,6 +564,7 @@ const ankuendigung: Template = {
       maxLines: 3,
       maxChars: 90,
       example: "Tag der offenen Tür im Tierheim",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 84, y: 280, w: 912, h: 250 },
         portrait: { x: 84, y: 340, w: 912, h: 290 },
@@ -539,12 +595,7 @@ const ankuendigung: Template = {
         cornerRadius: 999,
       },
       example: "So., 14. Juni · 11–17 Uhr",
-      guardrails: {
-        maxOffsetX: 50,
-        maxOffsetY: 40,
-        minScale: 0.85,
-        maxScale: 1.2,
-      },
+      guardrails: BADGE_RAILS,
       frames: {
         square: { x: 240, y: 570, w: 600, h: 90 },
         portrait: { x: 240, y: 680, w: 600, h: 90 },
@@ -572,6 +623,7 @@ const ankuendigung: Template = {
       maxChars: 140,
       example:
         "Mit Führungen, Kuchen und ganz vielen Fellnasen, die dich kennenlernen möchten.",
+      guardrails: TEXT_RAILS,
       frames: {
         square: { x: 144, y: 700, w: 792, h: 140 },
         portrait: { x: 144, y: 820, w: 792, h: 170 },
@@ -582,6 +634,7 @@ const ankuendigung: Template = {
       id: "qr",
       type: "qr",
       optional: true,
+      guardrails: QR_RAILS,
       frames: {
         square: { x: 492, y: 880, w: 96, h: 96 },
         portrait: { x: 492, y: 1050, w: 96, h: 96 },

@@ -4,7 +4,7 @@
  * what catches typos in the 2160-wide carousel coordinate space.
  */
 import { describe, expect, it } from "vitest";
-import { templateSlides } from "../engine/types";
+import { activeVariant, templateSlides } from "../engine/types";
 import { POST_FORMATS } from "../lib/formats";
 import { getTemplate, TEMPLATES } from "./catalog";
 
@@ -29,6 +29,35 @@ describe("template frame geometry", () => {
       }
     });
   }
+});
+
+describe("template style variants", () => {
+  for (const template of TEMPLATES.filter((t) => t.variants?.length)) {
+    it(`${template.id}: variants are unique and reference real slots`, () => {
+      const variants = template.variants ?? [];
+      const ids = variants.map((v) => v.id);
+      expect(new Set(ids).size).toBe(ids.length);
+      const slotIds = new Set(template.slots.map((s) => s.id));
+      for (const variant of variants) {
+        for (const slotId of Object.keys(variant.overrides)) {
+          expect(slotIds.has(slotId), `${variant.id} → ${slotId}`).toBe(true);
+        }
+      }
+    });
+  }
+
+  it("falls back to the first (default) variant for unknown ids", () => {
+    const template = getTemplate("produkt-klassik");
+    expect(template).toBeDefined();
+    if (!template) return;
+    expect(activeVariant(template, undefined)?.id).toBe(
+      template.variants?.[0]?.id,
+    );
+    expect(activeVariant(template, "gibt-es-nicht")?.id).toBe(
+      template.variants?.[0]?.id,
+    );
+    expect(activeVariant(template, "kantig")?.id).toBe("kantig");
+  });
 });
 
 describe("templateSlides", () => {

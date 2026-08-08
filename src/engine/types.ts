@@ -188,9 +188,33 @@ export type Slot =
   | QrSlot
   | LogoSlot;
 
+/* ---------------------------------------------------------------- variants */
+
+/** Safe visual tweaks a style variant may apply to a single slot. */
+export interface SlotVariantOverride {
+  cornerRadius?: number;
+  /** Must keep the slot's color-role pairing readable (same roles). */
+  fill?: Fill;
+  /** Skip this slot entirely in this variant. */
+  hidden?: boolean;
+}
+
+/**
+ * A curated second look for a template ("Stil" toggle in Anpassen): purely
+ * decorative overrides, never layout changes — the guardrail model stays
+ * intact. The first variant is the default.
+ */
+export interface TemplateVariant {
+  id: string;
+  /** German label, e.g. "Kantig". */
+  name: string;
+  /** Keyed by slot id; unlisted slots render unchanged. */
+  overrides: Record<string, SlotVariantOverride>;
+}
+
 /* ---------------------------------------------------------------- template */
 
-export type TemplateCategory = "products" | "quotes" | "dogs";
+export type TemplateCategory = "products" | "quotes" | "dogs" | "team";
 
 export interface Template {
   id: string;
@@ -209,6 +233,18 @@ export interface Template {
    * across the swipe — the "long dachshund" effect.
    */
   slides?: number;
+  /** Optional style variants ("Stil" toggle); the first one is the default. */
+  variants?: TemplateVariant[];
+}
+
+/** The variant to render: explicit id, falling back to the first (default). */
+export function activeVariant(
+  template: Template,
+  variantId?: string | null,
+): TemplateVariant | undefined {
+  const variants = template.variants;
+  if (!variants || variants.length === 0) return undefined;
+  return variants.find((v) => v.id === variantId) ?? variants[0];
 }
 
 /** Number of exported images for a template (1 for normal templates). */
@@ -279,4 +315,6 @@ export interface RenderInput {
    * Ignored for normal single-image templates.
    */
   slide?: number;
+  /** Style variant to render; default is the template's first variant. */
+  variantId?: string;
 }
