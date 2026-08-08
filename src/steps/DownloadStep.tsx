@@ -2,11 +2,17 @@
  * Step 5: Herunterladen (task 13). Full-resolution PNG export via the engine,
  * saved through the native share sheet where possible (lands directly in
  * photo apps), otherwise as a classic download with a German iOS hint.
+ *
+ * Extras: carousel templates export one PNG per swipe slide, and after saving
+ * the same post can be exported in the other two formats without redoing the
+ * wizard (adjustments stay clamped by the format-independent guardrails).
  */
 import { useMemo, useState } from "react";
 import { PostPreview } from "../components/PostPreview";
-import { exportPng } from "../engine/export";
+import { exportSlides } from "../engine/export";
+import { templateSlides } from "../engine/types";
 import { newDraftSession } from "../lib/draftStore";
+import { POST_FORMATS, type PostFormat } from "../lib/formats";
 import { buildRenderInput } from "../lib/renderInput";
 import { useBrand } from "../state/brand";
 import { useWizard } from "../state/wizard";
@@ -26,10 +32,12 @@ function slugify(text: string): string {
   );
 }
 
+type FormatId = PostFormat["id"];
+
 type SaveState =
   | { phase: "idle" }
-  | { phase: "working" }
-  | { phase: "done"; via: "share" | "download" }
+  | { phase: "working"; formatId: FormatId }
+  | { phase: "done"; via: "share" | "download"; formatId: FormatId }
   | { phase: "error"; message: string };
 
 export function DownloadStep() {
@@ -38,9 +46,10 @@ export function DownloadStep() {
   const [save, setSave] = useState<SaveState>({ phase: "idle" });
 
   const template = state.templateId ? getTemplate(state.templateId) : undefined;
+  const slides = template ? templateSlides(template) : 1;
 
-  const fileName = useMemo(() => {
-    if (!template) return "post.png";
+  const fileBase = useMemo(() => {
+    if (!template) return "post";
     // Prefer the first user-entered text (e.g. dog name/headline) for the name.
     const firstText = template.slots.find(
       (slot) => slot.type === "text" && state.values[slot.id]?.type === "text",
@@ -48,7 +57,7 @@ export function DownloadStep() {
     const value = firstText ? state.values[firstText.id] : undefined;
     const base = value?.type === "text" ? value.text : template.name;
     const date = new Date().toISOString().slice(0, 10);
-    return `${slugify(base)}-${date}.png`;
+    return `${slugify(base)}-${date}`;
   }, [template, state.values]);
 
   if (!template || !state.formatId) {
@@ -60,6 +69,8 @@ export function DownloadStep() {
       </div>
     );
   }
+  const chosenFormatId = state.formatId;
+  const otherFormats = POST_FORMATS.filter((f) => f.id !== chosenFormatId);
 
   const untouchedTexts = template.slots.filter(
     (slot) =>
@@ -68,17 +79,37 @@ export function DownloadStep() {
       state.values[slot.id]?.type !== "text",
   );
 
-  async function saveImage() {
-    if (!template) return;
-    setSave({ phase: "working" });
-    try {
-      const blob = await exportPng(buildRenderInput(state, template, kit));
-      const file = new File([blob], fileName, { type: "image/png" });
+  function namesFor(formatId: FormatId): string[] {
+    const formatSuffix =
+      formatId === chosenFormatId
+        ? ""
+        : `-${slugify(POST_FORMATS.find((f) => f.id === formatId)?.label ?? formatId)}`;
+    if (slides === 1) return [`${fileBase}${formatSuffix}.png`];
+    return Array.from(
+      { length: slides },
+      (_, i) => `${fileBase}${formatSuffix}-${i + 1}.png`,
+    );
+  }
 
-      if (navigator.canShare?.({ files: [file] })) {
+  async function saveImage(formatId: FormatId) {
+    if (!template) return;
+    setSave({ phase: "working", formatId });
+    try {
+      const blobs = await exportSlides(
+        buildRenderInput({ ...state, formatId }, template, kit),
+      );
+      const names = namesFor(formatId);
+      const files = blobs.map(
+        (blob, i) =>
+          new File([blob], names[i] ?? `${fileBase}.png`, {
+            type: "image/png",
+          }),
+      );
+
+      if (navigator.canShare?.({ files })) {
         try {
-          await navigator.share({ files: [file] });
-          setSave({ phase: "done", via: "share" });
+          await navigator.share({ files });
+          setSave({ phase: "done", via: "share", formatId });
           return;
         } catch (error) {
           // She closed the share sheet — that's not an error.
@@ -90,13 +121,18 @@ export function DownloadStep() {
         }
       }
 
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      link.click();
-      window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
-      setSave({ phase: "done", via: "download" });
+      files.forEach((file, i) => {
+        // Staggered so browsers don't swallow the second download.
+        window.setTimeout(() => {
+          const url = URL.createObjectURL(file);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = file.name;
+          link.click();
+          window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
+        }, i * 500);
+      });
+      setSave({ phase: "done", via: "download", formatId });
     } catch {
       setSave({
         phase: "error",
@@ -111,6 +147,8 @@ export function DownloadStep() {
     dispatch({ type: "restart" });
   }
 
+  const workingId = save.phase === "working" ? save.formatId : null;
+
   return (
     <>
       <div className="post-preview">
@@ -119,6 +157,13 @@ export function DownloadStep() {
           ariaLabel="Vorschau deines fertigen Posts"
         />
       </div>
+
+      {slides > 1 && save.phase !== "done" && (
+        <p className="step-hint">
+          Dieser Post besteht aus {slides} Bildern. Wähle beim Posten einfach
+          beide aus – deine Follower wischen dann weiter. 🐾
+        </p>
+      )}
 
       {untouchedTexts.length > 0 && save.phase !== "done" && (
         <p className="step-hint">
@@ -138,9 +183,31 @@ export function DownloadStep() {
           </p>
           <p style={{ margin: "8px 0 0" }}>
             {save.via === "share"
-              ? "Dein Bild ist gespeichert. Öffne Instagram und wähle es beim Erstellen deines Beitrags aus."
-              : "Dein Bild liegt jetzt in deinen Downloads. Falls du es nicht findest: Halte das Bild gedrückt und wähle „Bild sichern“."}
+              ? slides > 1
+                ? "Deine Bilder sind gespeichert. Öffne Instagram und wähle beim Erstellen deines Beitrags beide Bilder nacheinander aus."
+                : "Dein Bild ist gespeichert. Öffne Instagram und wähle es beim Erstellen deines Beitrags aus."
+              : slides > 1
+                ? "Deine Bilder liegen jetzt in deinen Downloads. Falls du sie nicht findest: Halte ein Bild gedrückt und wähle „Bild sichern“."
+                : "Dein Bild liegt jetzt in deinen Downloads. Falls du es nicht findest: Halte das Bild gedrückt und wähle „Bild sichern“."}
           </p>
+          <div style={{ marginTop: 16 }}>
+            <p className="field-hint" style={{ marginBottom: 8 }}>
+              Gleicher Post, anderes Format?
+            </p>
+            <div className="button-row">
+              {otherFormats.map((format) => (
+                <button
+                  key={format.id}
+                  type="button"
+                  className="button-secondary"
+                  disabled={workingId !== null}
+                  onClick={() => void saveImage(format.id)}
+                >
+                  Auch als {format.label}
+                </button>
+              ))}
+            </div>
+          </div>
           <button
             type="button"
             className="button-primary"
@@ -155,12 +222,16 @@ export function DownloadStep() {
           <button
             type="button"
             className="button-primary"
-            disabled={save.phase === "working"}
-            onClick={() => void saveImage()}
+            disabled={workingId !== null}
+            onClick={() => void saveImage(chosenFormatId)}
           >
-            {save.phase === "working"
-              ? "Bild wird erstellt …"
-              : "💾 Bild speichern"}
+            {workingId !== null
+              ? slides > 1
+                ? "Bilder werden erstellt …"
+                : "Bild wird erstellt …"
+              : slides > 1
+                ? "💾 Beide Bilder speichern"
+                : "💾 Bild speichern"}
           </button>
           {save.phase === "error" && (
             <p className="step-hint" role="alert" style={{ color: "#b3402a" }}>
@@ -168,7 +239,9 @@ export function DownloadStep() {
             </p>
           )}
           <p className="field-hint" style={{ textAlign: "center" }}>
-            Gespeichert wird in voller Qualität ({fileName}).
+            Gespeichert wird in voller Qualität (
+            {namesFor(chosenFormatId).join(", ")}
+            ).
           </p>
         </>
       )}

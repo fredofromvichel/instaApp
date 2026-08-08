@@ -23,7 +23,7 @@ import type {
   Slot,
   TextSlot,
 } from "./types";
-import { IDENTITY_ADJUSTMENT, LOCKED } from "./types";
+import { IDENTITY_ADJUSTMENT, LOCKED, templateSlides } from "./types";
 
 export function resolvePalette(input: RenderInput): Palette {
   if (input.palette) return input.palette;
@@ -278,12 +278,19 @@ export function effectiveFrame(
 /**
  * Render a filled-in template onto `canvas` at the exact resolution of the
  * chosen format. Draw order = slot order (background first).
+ *
+ * Carousel templates (`template.slides` > 1) lay their slots out in a
+ * `slides × width` wide coordinate space; `input.slide` picks the window
+ * that lands on the canvas, so photos/gradients continue seamlessly from
+ * one exported image into the next.
  */
 export async function renderPost(
   canvas: HTMLCanvasElement,
   input: RenderInput,
 ): Promise<void> {
   const format = getFormat(input.formatId);
+  const slides = templateSlides(input.template);
+  const slide = Math.max(0, Math.min(slides - 1, input.slide ?? 0));
   canvas.width = format.width;
   canvas.height = format.height;
   const ctx = canvas.getContext("2d");
@@ -292,14 +299,21 @@ export async function renderPost(
   await ensureFontsLoaded(input.template);
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // Setting canvas.width above reset the transform, so this never stacks.
+  ctx.translate(-slide * format.width, 0);
 
   for (const slot of input.template.slots) {
     const frame = effectiveFrame(slot, input.formatId, input.adjustments);
     switch (slot.type) {
       case "background": {
-        const full: Frame = { x: 0, y: 0, w: format.width, h: format.height };
+        const full: Frame = {
+          x: 0,
+          y: 0,
+          w: format.width * slides,
+          h: format.height,
+        };
         ctx.fillStyle = resolveFill(ctx, slot.fill, palette, full);
-        ctx.fillRect(0, 0, format.width, format.height);
+        ctx.fillRect(full.x, full.y, full.w, full.h);
         break;
       }
       case "shape": {

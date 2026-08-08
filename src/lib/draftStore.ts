@@ -6,7 +6,7 @@
 import type { SlotAdjustment, SlotValue } from "../engine/types";
 import type { WizardState } from "../state/wizard";
 import { STEPS } from "../state/wizard";
-import { idbDelete, idbGetAll, idbPut } from "./db";
+import { idbDelete, idbGet, idbGetAll, idbPut } from "./db";
 
 export const MAX_DRAFTS = 10;
 
@@ -182,6 +182,25 @@ export async function listDrafts(): Promise<StoredDraft[]> {
 
 export async function deleteDraft(id: string): Promise<void> {
   await idbDelete("drafts", id);
+}
+
+/**
+ * Store a copy of a draft under a new id (blobs are structured-cloned by
+ * IndexedDB) so the original stays untouched while the copy is edited.
+ */
+export async function duplicateDraft(
+  id: string,
+): Promise<StoredDraft | undefined> {
+  const original = await idbGet<StoredDraft>("drafts", id);
+  if (!original) return undefined;
+  const copy: StoredDraft = {
+    ...original,
+    id: crypto.randomUUID(),
+    updatedAt: Date.now(),
+  };
+  await idbPut("drafts", copy);
+  await pruneDrafts();
+  return copy;
 }
 
 /** Keep only the newest MAX_DRAFTS drafts. */

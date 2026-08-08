@@ -206,9 +206,24 @@ export function AdjustStep() {
     dispatch({ type: "setAdjustment", slotId: selectedId, adjustment: null });
   }
 
+  /** One tap on a size button = one undoable step. */
+  function stepSize(factor: number) {
+    if (!selectedId) return;
+    gesture.current.historyPushed = false;
+    pushHistory();
+    updateAdjustment(selectedId, (a) => ({ ...a, scale: a.scale * factor }));
+  }
+
   const selectionFrame = selectedSlot
     ? effectiveFrame(selectedSlot, formatId, state.adjustments)
     : null;
+
+  // "Kleiner/Größer" buttons: an easier alternative to two-finger pinch.
+  const rails = selectedSlot?.guardrails;
+  const canResize = !!rails && (rails.minScale < 1 || rails.maxScale > 1);
+  const currentScale = selectedId
+    ? (state.adjustments[selectedId]?.scale ?? 1)
+    : 1;
 
   return (
     <>
@@ -219,7 +234,9 @@ export function AdjustStep() {
           <h2 className="form-section-title">Feinschliff</h2>
           <p className="step-hint">
             {selectedSlot
-              ? "Ziehe das Element an seinen Platz – mit zwei Fingern änderst du die Größe."
+              ? canResize
+                ? "Ziehe das Element an seinen Platz. Die Größe änderst du mit den Knöpfen unten – oder mit zwei Fingern."
+                : "Ziehe das Element an seinen Platz."
               : "Tippe auf ein Element mit gestricheltem Rahmen, um es zu verschieben."}
           </p>
         </>
@@ -258,6 +275,26 @@ export function AdjustStep() {
             })}
         </div>
       </div>
+      {canResize && rails && (
+        <div className="button-row">
+          <button
+            type="button"
+            className="button-secondary"
+            disabled={currentScale <= rails.minScale * 1.001}
+            onClick={() => stepSize(0.9)}
+          >
+            − Kleiner
+          </button>
+          <button
+            type="button"
+            className="button-secondary"
+            disabled={currentScale >= rails.maxScale * 0.999}
+            onClick={() => stepSize(1.1)}
+          >
+            + Größer
+          </button>
+        </div>
+      )}
       {hasAdjustable && (
         <div className="button-row">
           <button

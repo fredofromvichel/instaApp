@@ -98,14 +98,28 @@ Logo auto-offered for logo slots; saved colors appear as extra palettes.
 
 ### Drafts ("Entwürfe")
 Autosave of the full working state (template, inputs, photo, adjustments) in
-IndexedDB, including photo blobs. List with thumbnails; reopen/delete; cap at
-~10 drafts; friendly notice when storage is full. Clear German note that data
-lives only on this phone.
+IndexedDB, including photo blobs. List with thumbnails; reopen/copy/delete;
+cap at ~10 drafts; friendly notice when storage is full. Clear German note
+that data lives only on this phone. "Als Kopie öffnen" duplicates a draft and
+opens the copy — recurring posts (weekly offers) are edited without touching
+the original.
 
 ### Export
 Exact-resolution PNG (1080×1080 / 1080×1350 / 1080×1920), identical to the
 preview. Save via Web Share API (share sheet → photo apps) where available;
 download fallback with per-platform German instructions. Sensible file names.
+After a successful save, the same post can be exported in the other two
+formats in one tap ("Gleicher Post, anderes Format") — same content, palette
+and clamped adjustments, re-rendered at the other format's exact resolution.
+
+### Carousel templates ("2 Bilder")
+A template may export **multiple swipeable images** (Instagram carousel).
+Slot frames then live in an N× wide coordinate space and each exported image
+is one 1080-wide window into it, so a panorama photo (e.g. a very long dog)
+and background gradients continue seamlessly across the swipe. Preview shows
+all slides side by side; export saves/shares one PNG per slide, numbered in
+swipe order. Guardrail model is unchanged (v1 carousel layout is locked;
+photo pan/zoom works as everywhere).
 
 ## 7. Technical constraints
 
@@ -144,6 +158,13 @@ download fallback with per-platform German instructions. Sensible file names.
   screens — fewer taps, same message.
 - **Brand palettes:** a saved brand color becomes the template's default
   palette with accent + contrast-safe text-on-accent swapped in.
+- **Size buttons:** the Anpassen step offers "− Kleiner / + Größer" buttons
+  for the selected adjustable element as an easier alternative to two-finger
+  pinch; both paths go through the same `clampAdjustment` guardrails.
+- **Schema extension `slides`:** carousel templates declare
+  `slides: N`; the engine renders slide k by shifting the N×-wide slot space
+  by k·width (see §6 "Carousel templates"). First instance:
+  "Langer Hund (2 Bilder)" in the dog category.
 
 ## 10. Task map
 

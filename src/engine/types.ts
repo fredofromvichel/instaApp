@@ -199,6 +199,19 @@ export interface Template {
   palettes: Palette[];
   /** Draw order = array order (background first). */
   slots: Slot[];
+  /**
+   * Carousel templates: number of swipeable images this template exports
+   * (default 1). With N slides, slot frames live in an N× wide coordinate
+   * space (x ∈ [0, N·width]); slide k shows the window [k·width, (k+1)·width].
+   * A photo/background spanning several slides therefore continues seamlessly
+   * across the swipe — the "long dachshund" effect.
+   */
+  slides?: number;
+}
+
+/** Number of exported images for a template (1 for normal templates). */
+export function templateSlides(template: Template): number {
+  return Math.max(1, Math.floor(template.slides ?? 1));
 }
 
 /* ------------------------------------------------------------------ values */
@@ -259,4 +272,9 @@ export interface RenderInput {
    * so templates look finished before the user edits anything.
    */
   previewExamples?: boolean;
+  /**
+   * Which slide of a carousel template to render (0-based, default 0).
+   * Ignored for normal single-image templates.
+   */
+  slide?: number;
 }

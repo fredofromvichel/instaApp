@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import {
   deleteDraft,
   deserializeState,
+  duplicateDraft,
   listDrafts,
   type StoredDraft,
   setCurrentDraftId,
@@ -64,12 +65,23 @@ export function DraftList() {
     setDrafts((current) => current.filter((d) => d.id !== id));
   }
 
+  /** Duplicate, then edit the copy — the original draft stays untouched. */
+  async function copyDraft(id: string) {
+    try {
+      const copy = await duplicateDraft(id);
+      if (copy) await openDraft(copy);
+    } catch {
+      setError("Der Entwurf konnte leider nicht kopiert werden.");
+    }
+  }
+
   return (
     <section>
       <h2 className="form-section-title">Deine Entwürfe</h2>
       <p className="field-hint">
         Bleiben nur auf diesem Handy gespeichert – die neuesten 10 werden
-        behalten.
+        behalten. Mit ⧉ öffnest du eine Kopie, z.&nbsp;B. für den nächsten
+        Wochen-Post.
       </p>
       {error && (
         <p className="field-hint" role="alert" style={{ color: "#b3402a" }}>
@@ -95,6 +107,15 @@ export function DraftList() {
                     {formatDate(draft.updatedAt)} Uhr
                   </span>
                 </span>
+              </button>
+              <button
+                type="button"
+                className="draft-copy"
+                aria-label="Entwurf als Kopie öffnen"
+                title="Als Kopie öffnen"
+                onClick={() => void copyDraft(draft.id)}
+              >
+                ⧉
               </button>
               <button
                 type="button"

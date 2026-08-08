@@ -778,9 +778,206 @@ const hundBanner: Template = {
   ],
 };
 
+/**
+ * Carousel template (2 swipe slides): one continuous panorama photo across
+ * both images — slide 1 shows the front of the (long) dog, swiping reveals
+ * the rest. Frames live in the doubled 2160-wide coordinate space; slide 1
+ * covers x 0–1080, slide 2 covers x 1080–2160. Layout is locked (no
+ * guardrails) — the photo is still fully pannable/zoomable in "Inhalte".
+ */
+const hundKarussell: Template = {
+  id: "hund-karussell",
+  name: "Langer Hund (2 Bilder)",
+  category: "dogs",
+  slides: 2,
+  palettes: DOG_PALETTES,
+  slots: [
+    {
+      id: "bg",
+      type: "background",
+      fill: { type: "solid", role: "background" },
+      frames: FULL_FRAMES,
+    },
+    {
+      id: "photo",
+      type: "photo",
+      frames: {
+        square: { x: 0, y: 0, w: 2160, h: 1080 },
+        portrait: { x: 0, y: 0, w: 2160, h: 1350 },
+        story: { x: 0, y: 0, w: 2160, h: 1920 },
+      },
+    },
+    {
+      id: "scrim",
+      type: "shape",
+      shape: "rect",
+      fill: { type: "scrim", role: "text", direction: "down", opacity: 0.72 },
+      frames: {
+        square: { x: 0, y: 620, w: 2160, h: 460 },
+        portrait: { x: 0, y: 810, w: 2160, h: 540 },
+        story: { x: 0, y: 1180, w: 2160, h: 740 },
+      },
+    },
+    {
+      id: "eyebrow",
+      type: "text",
+      role: "eyebrow",
+      label: "",
+      fixed: true,
+      font: {
+        family: SANS,
+        weight: 700,
+        minSize: 20,
+        maxSize: 23,
+        lineHeight: 1.2,
+        letterSpacing: 4,
+        uppercase: true,
+      },
+      color: "textOnAccent",
+      align: "left",
+      vAlign: "bottom",
+      maxLines: 1,
+      example: "Steckbrief in voller Länge",
+      frames: {
+        square: { x: 64, y: 806, w: 760, h: 32 },
+        portrait: { x: 64, y: 1070, w: 760, h: 32 },
+        story: { x: 64, y: 1614, w: 760, h: 36 },
+      },
+    },
+    {
+      id: "name",
+      type: "text",
+      role: "name",
+      label: "Name",
+      font: {
+        family: SERIF,
+        weight: 600,
+        minSize: 64,
+        maxSize: 108,
+        lineHeight: 1.05,
+      },
+      color: "textOnAccent",
+      align: "left",
+      vAlign: "bottom",
+      maxLines: 1,
+      maxChars: 16,
+      example: "Waldemar",
+      frames: {
+        square: { x: 64, y: 846, w: 860, h: 122 },
+        portrait: { x: 64, y: 1110, w: 860, h: 130 },
+        story: { x: 64, y: 1658, w: 860, h: 140 },
+      },
+    },
+    {
+      id: "subline",
+      type: "text",
+      role: "subline",
+      label: "Untertitel",
+      optional: true,
+      font: {
+        family: SANS,
+        weight: 500,
+        minSize: 26,
+        maxSize: 34,
+        lineHeight: 1.25,
+      },
+      color: "textOnAccent",
+      align: "left",
+      vAlign: "top",
+      maxLines: 1,
+      maxChars: 45,
+      example: "Der längste Dackel der Stadt",
+      frames: {
+        square: { x: 64, y: 976, w: 860, h: 44 },
+        portrait: { x: 64, y: 1248, w: 860, h: 44 },
+        story: { x: 64, y: 1806, w: 860, h: 48 },
+      },
+    },
+    {
+      id: "swipe-hint",
+      type: "text",
+      role: "caption",
+      label: "",
+      fixed: true,
+      font: {
+        family: SANS,
+        weight: 700,
+        minSize: 24,
+        maxSize: 28,
+        lineHeight: 1.2,
+      },
+      color: "textOnAccent",
+      align: "right",
+      vAlign: "center",
+      maxLines: 1,
+      badge: {
+        fill: { type: "solid", role: "accent" },
+        paddingX: 26,
+        paddingY: 14,
+        cornerRadius: 999,
+      },
+      example: "Weiter wischen ➜",
+      frames: {
+        square: { x: 580, y: 494, w: 420, h: 40 },
+        portrait: { x: 580, y: 630, w: 420, h: 40 },
+        story: { x: 580, y: 900, w: 420, h: 44 },
+      },
+    },
+    {
+      id: "story",
+      type: "text",
+      role: "story",
+      label: "Text auf Bild 2",
+      optional: true,
+      multiline: true,
+      font: {
+        family: SANS,
+        weight: 500,
+        minSize: 30,
+        maxSize: 44,
+        lineHeight: 1.3,
+      },
+      color: "textOnAccent",
+      align: "left",
+      vAlign: "bottom",
+      maxLines: 4,
+      maxChars: 160,
+      example:
+        "… und hinten hört er noch lange nicht auf! Waldemar sucht ein Zuhause mit ganz viel Platz zum Strecken.",
+      frames: {
+        square: { x: 1144, y: 750, w: 820, h: 260 },
+        portrait: { x: 1144, y: 1000, w: 820, h: 280 },
+        story: { x: 1144, y: 1530, w: 820, h: 310 },
+      },
+    },
+    {
+      id: "qr",
+      type: "qr",
+      optional: true,
+      cornerRadius: 16,
+      frames: {
+        square: { x: 1996, y: 916, w: 100, h: 100 },
+        portrait: { x: 1996, y: 1186, w: 100, h: 100 },
+        story: { x: 1976, y: 1736, w: 120, h: 120 },
+      },
+    },
+    {
+      id: "logo",
+      type: "logo",
+      optional: true,
+      frames: {
+        square: { x: 1956, y: 64, w: 140, h: 140 },
+        portrait: { x: 1956, y: 64, w: 140, h: 140 },
+        story: { x: 1936, y: 72, w: 160, h: 160 },
+      },
+    },
+  ],
+};
+
 export const dogTemplates: Template[] = [
   hundSteckbrief,
   hundVollbild,
   hundKarte,
   hundBanner,
+  hundKarussell,
 ];

@@ -46,8 +46,9 @@ dir gefällt. Keine Sorge: Farben und Texte änderst du gleich noch.
 - **Farben:** Tippe auf eine der Farbwelten – das ganze Design färbt sich
   passend um.
 - **Feinschliff:** Manche Elemente haben einen gestrichelten Rahmen. Tippe
-  eines an und verschiebe es mit dem Finger, oder ändere mit zwei Fingern
-  die Größe. Mit **„Zurücksetzen“** kommt alles wieder an seinen Platz.
+  eines an und verschiebe es mit dem Finger. Die Größe änderst du ganz
+  einfach mit den Knöpfen **„− Kleiner“** und **„+ Größer“** (oder mit zwei
+  Fingern). Mit **„Zurücksetzen“** kommt alles wieder an seinen Platz.
 
 ## Schritt 5: Speichern 💾
 
@@ -58,11 +59,20 @@ gespeichert.
 **Und dann:** Öffne Instagram, erstelle einen neuen Beitrag und wähle dein
 gespeichertes Bild aus. Fertig! 🎉
 
+- **Gleicher Post, anderes Format:** Nach dem Speichern kannst du denselben
+  Post mit einem Tipp auch in den anderen Formaten speichern – praktisch,
+  wenn du z. B. ein Quadrat für den Beitrag und eine Story brauchst.
+- **Vorlagen mit 2 Bildern:** Bei der Vorlage **„Langer Hund“** entstehen
+  zwei Bilder, die zusammengehören. Wähle beim Posten einfach beide aus –
+  deine Follower wischen dann von vorne nach hinten. 🐕
+
 ## Gut zu wissen
 
 - **Entwürfe:** Die App speichert automatisch, woran du gerade arbeitest.
   Auf dem Startbildschirm findest du unter **„Deine Entwürfe“** deine
-  letzten Arbeiten und kannst jederzeit weitermachen.
+  letzten Arbeiten und kannst jederzeit weitermachen. Mit dem **⧉-Knopf**
+  öffnest du einen Entwurf als Kopie – ideal für Posts, die jede Woche
+  ähnlich aussehen.
 - **Mein Stil:** Unter **„🎨 Mein Stil“** (auf dem Startbildschirm) kannst du
   einmalig dein Logo und deine Lieblingsfarben hinterlegen. Dein Logo wird
   dann automatisch angeboten, deine Farben erscheinen beim Anpassen.

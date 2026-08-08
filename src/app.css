@@ -256,6 +256,22 @@
   box-shadow: var(--shadow);
 }
 
+/* Carousel templates: all swipe slides previewed side by side. */
+.carousel-strip {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+}
+
+.carousel-strip canvas {
+  width: auto;
+  height: auto;
+  max-width: calc(50% - 3px);
+  min-width: 0;
+}
+
 /* -------------------------------------------------------------- fields */
 
 .field {
@@ -480,6 +496,7 @@
   gap: 2px;
 }
 
+.draft-copy,
 .draft-delete {
   border: none;
   background: var(--surface);
