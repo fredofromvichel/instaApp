@@ -9,8 +9,9 @@ import { getFormat } from "../lib/formats";
 import {
   applyAdjustment,
   clampAdjustment,
-  computeCoverCrop,
+  computePhotoPlacement,
   containFit,
+  coversFrame,
 } from "./geometry";
 import { autoFitText } from "./text";
 import type {
@@ -18,6 +19,7 @@ import type {
   Frame,
   Palette,
   PhotoSlot,
+  PhotoValue,
   QrSlot,
   RenderInput,
   Slot,
@@ -26,6 +28,7 @@ import type {
 } from "./types";
 import {
   activeVariant,
+  DEFAULT_CROP,
   IDENTITY_ADJUSTMENT,
   LOCKED,
   templateSlides,
@@ -223,6 +226,72 @@ function drawPhotoPlaceholder(
   ctx.fill();
 }
 
+/** Longest edge of the cached mini-canvas the blurred backdrop grows out of. */
+const BACKDROP_SOURCE_SIZE = 64;
+
+/** Extra canvas blur, as a fraction of the frame's longer edge. */
+const BACKDROP_BLUR = 0.045;
+
+/**
+ * One tiny copy per photo, reused across renders — the backdrop is redrawn on
+ * every pan/zoom frame, and downscaling a full-size photo each time would make
+ * dragging stutter on a phone.
+ */
+const backdropCache = new WeakMap<CanvasImageSource, HTMLCanvasElement>();
+
+function backdropSource(value: PhotoValue): HTMLCanvasElement | null {
+  const cached = backdropCache.get(value.source);
+  if (cached) return cached;
+  if (typeof document === "undefined") return null;
+  const scale = Math.min(
+    1,
+    BACKDROP_SOURCE_SIZE / Math.max(value.width, value.height),
+  );
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(value.width * scale));
+  canvas.height = Math.max(1, Math.round(value.height * scale));
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  ctx.drawImage(value.source, 0, 0, canvas.width, canvas.height);
+  backdropCache.set(value.source, canvas);
+  return canvas;
+}
+
+/**
+ * Fill the slot with a blurred, cover-scaled copy of the photo — the trick
+ * video players use for videos that don't fit their box. Only runs when the
+ * user shrank the photo below its slot, so the gap shows the photo's own
+ * colors instead of raw whitespace. The caller has clipped to `frame`.
+ */
+function drawBlurredBackdrop(
+  ctx: CanvasRenderingContext2D,
+  value: PhotoValue,
+  frame: Frame,
+) {
+  const thumbnail = backdropSource(value);
+  const source = thumbnail ?? value.source;
+  const width = thumbnail?.width ?? value.width;
+  const height = thumbnail?.height ?? value.height;
+  const radius = Math.max(frame.w, frame.h) * BACKDROP_BLUR;
+  // Blur fades out what we draw, so cover an inflated frame and let the
+  // caller's clip cut the soft border away.
+  const bleed = radius * 3;
+  const inflated: Frame = {
+    x: frame.x - bleed,
+    y: frame.y - bleed,
+    w: frame.w + 2 * bleed,
+    h: frame.h + 2 * bleed,
+  };
+  const target = computePhotoPlacement(width, height, inflated, DEFAULT_CROP);
+  ctx.save();
+  // Upscaling the mini-canvas already blurs; the filter (where supported)
+  // smooths the interpolation seams away.
+  if ("filter" in ctx) ctx.filter = `blur(${radius}px)`;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(source, target.x, target.y, target.w, target.h);
+  ctx.restore();
+}
+
 function drawPhoto(
   ctx: CanvasRenderingContext2D,
   slot: PhotoSlot,
@@ -238,26 +307,24 @@ function drawPhoto(
     }
     return;
   }
-  const { sx, sy, sw, sh } = computeCoverCrop(
+  const placement = computePhotoPlacement(
     value.width,
     value.height,
-    frame.w,
-    frame.h,
+    frame,
     value.crop,
   );
   ctx.save();
   pathRoundRect(ctx, frame, cornerRadius);
   ctx.clip();
+  if (!coversFrame(placement, frame)) {
+    drawBlurredBackdrop(ctx, value, frame);
+  }
   ctx.drawImage(
     value.source,
-    sx,
-    sy,
-    sw,
-    sh,
-    frame.x,
-    frame.y,
-    frame.w,
-    frame.h,
+    placement.x,
+    placement.y,
+    placement.w,
+    placement.h,
   );
   ctx.restore();
 }

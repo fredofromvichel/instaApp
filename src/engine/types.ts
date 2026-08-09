@@ -256,9 +256,17 @@ export function templateSlides(template: Template): number {
 
 /** Pan/zoom crop of the photo inside its slot (driven by task 05 gestures). */
 export interface CropState {
-  /** 1 = exact cover fit; clamped to [1, MAX_ZOOM]. */
+  /**
+   * 1 = exact cover fit; clamped to [MIN_ZOOM, MAX_ZOOM]. Below 1 the photo is
+   * smaller than its slot and the renderer fills the gap with a blurred copy
+   * of the photo.
+   */
   zoom: number;
-  /** -1..1 — fraction of the available pan range (0 = centered). */
+  /**
+   * -1..1 — position along each axis (0 = centered). Zoomed in it pans across
+   * the hidden part of the photo, zoomed out it slides the photo between the
+   * frame's edges.
+   */
   offsetX: number;
   offsetY: number;
 }

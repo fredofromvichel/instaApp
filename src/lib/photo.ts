@@ -1,6 +1,7 @@
 /**
- * Photo loading (task 05): file from the phone's picker → decoded, correctly
- * oriented, downscaled image ready for the engine's PhotoValue.
+ * Photo loading (task 05): image data from the phone's picker or the
+ * clipboard → decoded, correctly oriented, downscaled image ready for the
+ * engine's PhotoValue.
  */
 
 export interface LoadedPhoto {
@@ -16,9 +17,9 @@ export interface LoadedPhoto {
  */
 const MAX_DIMENSION = 2400;
 
-function decodeViaImgElement(file: File): Promise<HTMLImageElement> {
+function decodeViaImgElement(source: Blob): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
+    const url = URL.createObjectURL(source);
     const img = new Image();
     img.onload = () => {
       URL.revokeObjectURL(url);
@@ -33,20 +34,23 @@ function decodeViaImgElement(file: File): Promise<HTMLImageElement> {
 }
 
 /**
- * Decode a photo file with EXIF orientation applied.
- * - `createImageBitmap(file, {imageOrientation: "from-image"})` handles
+ * Decode a photo (a picked file or a blob from the clipboard) with EXIF
+ * orientation applied.
+ * - `createImageBitmap(blob, {imageOrientation: "from-image"})` handles
  *   orientation and HEIC (on platforms that can decode it, e.g. iOS Safari).
  * - Fallback: <img> element decode — modern browsers orient it automatically
  *   (CSS `image-orientation: from-image` is the default).
  * Throws a German, user-facing Error when the format cannot be decoded.
  */
-export async function loadPhotoFile(file: File): Promise<LoadedPhoto> {
+export async function loadPhotoBlob(source: Blob): Promise<LoadedPhoto> {
   let decoded: ImageBitmap | HTMLImageElement;
   try {
-    decoded = await createImageBitmap(file, { imageOrientation: "from-image" });
+    decoded = await createImageBitmap(source, {
+      imageOrientation: "from-image",
+    });
   } catch {
     try {
-      decoded = await decodeViaImgElement(file);
+      decoded = await decodeViaImgElement(source);
     } catch {
       throw new Error(
         "Das Foto konnte leider nicht geladen werden. Versuch bitte ein anderes Foto.",

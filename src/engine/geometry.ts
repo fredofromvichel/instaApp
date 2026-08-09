@@ -8,56 +8,77 @@ import type { CropState, Frame, Guardrails, SlotAdjustment } from "./types";
 
 export const MAX_ZOOM = 3;
 
+/**
+ * Photos may be zoomed *below* their cover fit. The slot then shows the whole
+ * photo plus a gap, which the renderer fills with a blurred copy of the same
+ * photo (SPEC.md §9) — so "smaller than the frame" can never look broken.
+ * 0.35 is as small as a photo may get before it stops reading as the subject.
+ */
+export const MIN_ZOOM = 0.35;
+
 const clamp = (v: number, min: number, max: number) =>
   Math.min(max, Math.max(min, v));
 
-/** Clamp a crop state to legal bounds (zoom ≥ cover fit, offsets in -1..1). */
+/** Clamp a crop state to legal bounds (zoom in MIN..MAX, offsets in -1..1). */
 export function clampCrop(crop: CropState): CropState {
   return {
-    zoom: clamp(crop.zoom, 1, MAX_ZOOM),
+    zoom: clamp(crop.zoom, MIN_ZOOM, MAX_ZOOM),
     offsetX: clamp(crop.offsetX, -1, 1),
     offsetY: clamp(crop.offsetY, -1, 1),
   };
 }
 
-export interface SourceRect {
-  sx: number;
-  sy: number;
-  sw: number;
-  sh: number;
-}
-
 /**
- * Which source-image rectangle fills a frame under cover semantics + crop.
+ * Where the whole photo lands on the canvas for a frame + crop.
  *
- * zoom = 1 shows the largest possible centered cover crop; higher zoom shows
- * less of the image. offsetX/offsetY (-1..1) pan across the leftover source
- * area: -1 hits the left/top edge, 0 is centered, +1 the right/bottom edge.
- * The visible area can therefore never leave the image.
+ * zoom = 1 is the exact cover fit (frame fully covered, largest centered
+ * crop); zoom > 1 shows less of the photo; zoom < 1 shrinks it below the
+ * frame, leaving a gap the renderer fills with the blurred backdrop.
+ *
+ * offsetX/offsetY (-1..1) slide the photo along each axis: -1 aligns its
+ * left/top edge with the frame's, 0 centers, +1 aligns the right/bottom edge.
+ * The same formula covers both regimes — zoomed in, the photo never uncovers
+ * the frame; zoomed out, it never leaves the frame.
  */
-export function computeCoverCrop(
+export function computePhotoPlacement(
   imageWidth: number,
   imageHeight: number,
-  frameWidth: number,
-  frameHeight: number,
+  frame: Frame,
   crop: CropState,
-): SourceRect {
+): Frame {
   const { zoom, offsetX, offsetY } = clampCrop(crop);
-  const coverScale = Math.max(
-    frameWidth / imageWidth,
-    frameHeight / imageHeight,
-  );
+  const coverScale = Math.max(frame.w / imageWidth, frame.h / imageHeight);
   const scale = coverScale * zoom;
-  const sw = frameWidth / scale;
-  const sh = frameHeight / scale;
-  const leftoverX = (imageWidth - sw) / 2;
-  const leftoverY = (imageHeight - sh) / 2;
+  const w = imageWidth * scale;
+  const h = imageHeight * scale;
+  // Positive when the photo overflows the frame, negative when it falls short.
+  const overflowX = (w - frame.w) / 2;
+  const overflowY = (h - frame.h) / 2;
   return {
-    sx: leftoverX * (1 + offsetX),
-    sy: leftoverY * (1 + offsetY),
-    sw,
-    sh,
+    x: frame.x - overflowX * (1 + offsetX),
+    y: frame.y - overflowY * (1 + offsetY),
+    w,
+    h,
   };
+}
+
+/** How far the photo overflows the frame per axis (negative = gap). */
+export function placementOverflow(placement: Frame, frame: Frame) {
+  return {
+    x: (placement.w - frame.w) / 2,
+    y: (placement.h - frame.h) / 2,
+  };
+}
+
+/** Does a placement fill the whole frame (i.e. no gap to fill)? */
+export function coversFrame(placement: Frame, frame: Frame): boolean {
+  const epsilon = 0.5;
+  return (
+    placement.x <= frame.x + epsilon &&
+    placement.y <= frame.y + epsilon &&
+    placement.x + placement.w >= frame.x + frame.w - epsilon &&
+    placement.y + placement.h >= frame.y + frame.h - epsilon
+  );
 }
 
 /** Clamp a user adjustment to a slot's guardrails. */

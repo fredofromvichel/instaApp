@@ -31,8 +31,19 @@ dir gefällt. Keine Sorge: Farben und Texte änderst du gleich noch.
 
 - Tippe auf **„Foto auswählen“** und nimm ein Foto aus deiner Galerie oder
   mach direkt eins mit der Kamera.
+- **Bild aus der Zwischenablage:** Hast du ein Bild kopiert (z. B. in WhatsApp
+  oder im Browser: lange draufdrücken → **Kopieren**), tippe einfach auf
+  **„📋 Bild aus Zwischenablage“**. Dein Handy fragt dann kurz nach, ob das in
+  Ordnung ist – tippe auf **Einfügen**.
 - **Foto zurechtrücken:** Ziehe das Foto mit einem Finger an die richtige
-  Stelle. Mit zwei Fingern kannst du es größer oder kleiner zoomen.
+  Stelle. Mit den Knöpfen **„− Kleiner“** und **„+ Größer“** (oder mit zwei
+  Fingern) änderst du die Größe.
+- **Das ganze Foto zeigen:** Du kannst das Foto auch kleiner machen als seinen
+  Rahmen – praktisch, wenn sonst oben oder an den Seiten etwas abgeschnitten
+  wird. Der Platz, der dabei frei bleibt, wird automatisch weich und
+  verschwommen mit den Farben deines Fotos gefüllt (so wie bei Videos, die
+  nicht ganz ins Bild passen). Verschieben kannst du das Foto dabei bis genau
+  an den Rand.
 - Fülle die Textfelder aus. Der graue Text in den Feldern ist nur ein
   Beispiel – schreib einfach deinen eigenen Text hinein.
 - **QR-Code (optional):** Füge einen Link ein (z. B. zur Vermittlungsseite
