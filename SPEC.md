@@ -47,7 +47,7 @@ A template defines **slots**; the user can only fill and lightly adjust them:
 
 | Slot type | User can | User cannot |
 |-----------|----------|-------------|
-| Photo (exactly 1) | pick photo, pan/pinch-crop within the slot | move/resize the slot freely |
+| Photo (exactly 1) | pick photo (picker or clipboard), pan/pinch-crop within the slot, shrink it below the slot (gap fills with a blurred copy of the photo) | move/resize the slot freely |
 | Text | edit content; nudge/resize within template-defined limits | choose fonts, break layout, drag off-canvas |
 | QR (optional) | paste a URL; nudge/resize within limits | style it beyond palette-derived colors |
 | Logo (optional) | supply logo from brand kit; nudge/resize within limits | — |
@@ -134,7 +134,8 @@ preview canvases; photo pan/zoom works as everywhere.
 - Everything client-side: rendering (HTML canvas), QR generation, image
   processing, persistence (localStorage/IndexedDB).
 - Photos: handle HEIC/large images, EXIF orientation; keep enough resolution
-  for 1080-wide export; preview and export must render identically.
+  for 1080-wide export; preview and export must render identically. A photo may
+  come from the file picker (gallery/camera) or from the clipboard.
 - Fonts: 1–2 quality open-source fonts, self-hosted.
 - PWA: installable to home screen, works offline after first load.
 - Target browsers: iOS Safari and Android Chrome (current versions).
@@ -180,6 +181,23 @@ preview canvases; photo pan/zoom works as everywhere.
 - **Schema extension `badge.opacity`:** text badges may declare a fill
   opacity (text stays opaque) — used for overlay chips on photos, e.g. the
   carousel swipe hint.
+- **Photo zoom below cover fit + blurred backdrop:** the photo crop allows
+  `zoom < 1` (down to `MIN_ZOOM`), so a photo may be made *smaller* than its
+  slot and slid to any edge — the whole subject fits even when the slot's
+  aspect ratio doesn't match. The renderer fills the resulting gap with a
+  blurred, cover-scaled copy of the same photo (the trick video players use
+  for videos that don't fit their box), so the result never shows raw
+  whitespace and never needs a color decision. Guardrails are unchanged:
+  offsets stay in -1..1, which now means "never uncovers the frame" when
+  zoomed in and "never leaves the frame" when zoomed out.
+- **Photo zoom buttons:** "Inhalte" offers "− Kleiner / + Größer" next to the
+  pinch gesture — the same reasoning as the Anpassen size buttons, and the
+  only discoverable way to find the below-100 % range on a phone.
+- **Photos from the clipboard:** "📋 Bild aus Zwischenablage" reads an image
+  via `navigator.clipboard.read()` (the browser asks the user first), and a
+  `paste` listener accepts images pasted with a keyboard or iOS's "Einfügen".
+  Both feed the same decode path as the file picker; a pasted *text* is left
+  to the text fields.
 - **Schema extension `slides`:** carousel templates declare
   `slides: N`; the engine renders slide k by shifting the N×-wide slot space
   by k·width (see §6 "Carousel templates"). First instance:

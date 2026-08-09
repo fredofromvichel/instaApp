@@ -3,18 +3,33 @@
  * Task 05: photo picking + pan/pinch cropping directly on the live preview.
  * Task 06 adds the text inputs below the preview.
  */
-import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import {
+  type ChangeEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { PostPreview } from "../components/PostPreview";
 import { QrField } from "../components/QrField";
 import { TextField } from "../components/TextField";
+import { MAX_ZOOM, MIN_ZOOM } from "../engine/geometry";
 import type { Frame, PhotoValue, Template, TextSlot } from "../engine/types";
 import { DEFAULT_CROP } from "../engine/types";
-import { panCrop, pinchCrop } from "../lib/cropGestures";
-import { loadPhotoFile } from "../lib/photo";
+import {
+  canReadClipboardImage,
+  clipboardImageFromEvent,
+  readClipboardImage,
+} from "../lib/clipboard";
+import { panCrop, zoomCrop } from "../lib/cropGestures";
+import { loadPhotoBlob } from "../lib/photo";
 import { buildRenderInput } from "../lib/renderInput";
 import { useBrand } from "../state/brand";
 import { useWizard } from "../state/wizard";
 import { getTemplate } from "../templates/catalog";
+
+/** One tap on a zoom button. */
+const ZOOM_STEP = 1.15;
 
 function photoSlotOf(template: Template) {
   return template.slots.find((slot) => slot.type === "photo");
@@ -28,9 +43,11 @@ interface PointerState {
 /** Live preview with pan/pinch gestures controlling the photo crop. */
 function PhotoCropPreview({
   template,
+  slotId,
   frame,
 }: {
   template: Template;
+  slotId: string;
   frame: Frame;
 }) {
   const { state, dispatch } = useWizard();
@@ -41,12 +58,12 @@ function PhotoCropPreview({
     lastDistance: null,
   });
 
-  const photoValue = state.values.photo;
+  const photoValue = state.values[slotId];
   const hasPhoto = photoValue?.type === "photo";
 
   function updateCrop(update: (value: PhotoValue) => PhotoValue) {
     if (photoValue?.type !== "photo") return;
-    dispatch({ type: "setValue", slotId: "photo", value: update(photoValue) });
+    dispatch({ type: "setValue", slotId, value: update(photoValue) });
   }
 
   /** CSS pixels → canvas (1080-based) pixels. */
@@ -96,7 +113,7 @@ function PhotoCropPreview({
       if (last !== null && last > 0) {
         updateCrop((value) => ({
           ...value,
-          crop: pinchCrop(value.crop, distance / last),
+          crop: zoomCrop(value.crop, distance / last),
         }));
       }
       gesture.current.lastDistance = distance;
@@ -124,6 +141,197 @@ function PhotoCropPreview({
         ariaLabel="Vorschau deines Posts"
       />
     </div>
+  );
+}
+
+/**
+ * Everything around the photo: picking it (gallery/camera or clipboard),
+ * cropping it on the live preview, and the zoom buttons — the finger-friendly
+ * alternative to a two-finger pinch, and the only obvious way to discover that
+ * a photo may be made smaller than its frame.
+ */
+function PhotoField({
+  template,
+  slotId,
+  frame,
+}: {
+  template: Template;
+  slotId: string;
+  frame: Frame;
+}) {
+  const { state, dispatch } = useWizard();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const value = state.values[slotId];
+  const photo = value?.type === "photo" ? value : null;
+  const canPaste = canReadClipboardImage();
+
+  const applyPhoto = useCallback(
+    async (source: Blob) => {
+      setPhotoError(null);
+      setLoading(true);
+      try {
+        const loaded = await loadPhotoBlob(source);
+        dispatch({
+          type: "setValue",
+          slotId,
+          value: {
+            type: "photo",
+            source: loaded.source,
+            width: loaded.width,
+            height: loaded.height,
+            crop: DEFAULT_CROP,
+          },
+        });
+      } catch (error) {
+        setPhotoError(
+          error instanceof Error
+            ? error.message
+            : "Das hat leider nicht geklappt. Versuch es bitte noch einmal.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [dispatch, slotId],
+  );
+
+  // Hardware keyboards (Strg/Cmd + V) and iOS's long-press "Einfügen": a
+  // pasted image lands in the photo slot, pasted text is left alone.
+  useEffect(() => {
+    function onPaste(event: ClipboardEvent) {
+      const image = clipboardImageFromEvent(event);
+      if (!image) return;
+      event.preventDefault();
+      void applyPhoto(image);
+    }
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  }, [applyPhoto]);
+
+  async function onFileChosen(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (file) await applyPhoto(file);
+  }
+
+  /** Must run straight from the tap — the browser asks the user first. */
+  async function onPasteTapped() {
+    setPhotoError(null);
+    try {
+      const image = await readClipboardImage();
+      if (!image) {
+        setPhotoError(
+          "In der Zwischenablage ist gerade kein Bild. Kopiere zuerst ein Bild, z. B. in WhatsApp oder in deiner Foto-App.",
+        );
+        return;
+      }
+      await applyPhoto(image);
+    } catch (error) {
+      setPhotoError(
+        error instanceof Error
+          ? error.message
+          : "Das Einfügen hat leider nicht geklappt.",
+      );
+    }
+  }
+
+  function zoomPhoto(factor: number) {
+    if (!photo) return;
+    dispatch({
+      type: "setValue",
+      slotId,
+      value: { ...photo, crop: zoomCrop(photo.crop, factor) },
+    });
+  }
+
+  const pasteLabel = "📋 Bild aus Zwischenablage";
+  return (
+    <>
+      <PhotoCropPreview template={template} slotId={slotId} frame={frame} />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={(e) => void onFileChosen(e)}
+      />
+      {!photo ? (
+        <>
+          <button
+            type="button"
+            className="button-primary"
+            disabled={loading}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {loading ? "Foto wird geladen …" : "📷 Foto auswählen"}
+          </button>
+          {canPaste && (
+            <button
+              type="button"
+              className="button-secondary"
+              disabled={loading}
+              onClick={() => void onPasteTapped()}
+            >
+              {pasteLabel}
+            </button>
+          )}
+        </>
+      ) : (
+        <>
+          <p className="step-hint">
+            Ziehe das Foto zum Verschieben. Mit den Knöpfen – oder mit zwei
+            Fingern – machst du es größer und kleiner. Wird es kleiner als der
+            Rahmen, füllen wir den Rand weich mit den Farben deines Fotos.
+          </p>
+          <div className="button-row">
+            <button
+              type="button"
+              className="button-secondary"
+              disabled={photo.crop.zoom <= MIN_ZOOM * 1.001}
+              onClick={() => zoomPhoto(1 / ZOOM_STEP)}
+            >
+              − Kleiner
+            </button>
+            <button
+              type="button"
+              className="button-secondary"
+              disabled={photo.crop.zoom >= MAX_ZOOM * 0.999}
+              onClick={() => zoomPhoto(ZOOM_STEP)}
+            >
+              + Größer
+            </button>
+          </div>
+          <div className="button-row">
+            <button
+              type="button"
+              className="button-secondary"
+              disabled={loading}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {loading ? "Foto wird geladen …" : "Anderes Foto"}
+            </button>
+            {canPaste && (
+              <button
+                type="button"
+                className="button-secondary"
+                disabled={loading}
+                onClick={() => void onPasteTapped()}
+              >
+                {pasteLabel}
+              </button>
+            )}
+          </div>
+        </>
+      )}
+      {photoError && (
+        <p className="step-hint" role="alert" style={{ color: "#b3402a" }}>
+          {photoError}
+        </p>
+      )}
+    </>
   );
 }
 
@@ -186,10 +394,7 @@ function LogoToggle({ slotId }: { slotId: string }) {
 }
 
 export function ContentStep() {
-  const { state, dispatch } = useWizard();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [photoError, setPhotoError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const { state } = useWizard();
 
   const template = state.templateId ? getTemplate(state.templateId) : undefined;
   if (!template || !state.formatId) {
@@ -204,87 +409,16 @@ export function ContentStep() {
 
   const photoSlot = photoSlotOf(template);
   const frame = photoSlot?.frames[state.formatId];
-  const hasPhoto = state.values.photo?.type === "photo";
   const textSlots = template.slots.filter(
     (slot): slot is TextSlot => slot.type === "text" && !slot.fixed,
   );
   const qrSlot = template.slots.find((slot) => slot.type === "qr");
   const logoSlot = template.slots.find((slot) => slot.type === "logo");
 
-  async function onFileChosen(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file) return;
-    setPhotoError(null);
-    setLoading(true);
-    try {
-      const photo = await loadPhotoFile(file);
-      dispatch({
-        type: "setValue",
-        slotId: "photo",
-        value: {
-          type: "photo",
-          source: photo.source,
-          width: photo.width,
-          height: photo.height,
-          crop: DEFAULT_CROP,
-        },
-      });
-    } catch (error) {
-      setPhotoError(
-        error instanceof Error
-          ? error.message
-          : "Das hat leider nicht geklappt. Versuch es bitte noch einmal.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
     <>
       {photoSlot && frame && (
-        <PhotoCropPreview template={template} frame={frame} />
-      )}
-      {photoSlot && (
-        <>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={(e) => void onFileChosen(e)}
-          />
-          {!hasPhoto ? (
-            <button
-              type="button"
-              className="button-primary"
-              disabled={loading}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              {loading ? "Foto wird geladen …" : "📷 Foto auswählen"}
-            </button>
-          ) : (
-            <>
-              <p className="step-hint">
-                Ziehe das Foto zum Verschieben – mit zwei Fingern zoomst du.
-              </p>
-              <button
-                type="button"
-                className="button-secondary"
-                disabled={loading}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {loading ? "Foto wird geladen …" : "Anderes Foto wählen"}
-              </button>
-            </>
-          )}
-          {photoError && (
-            <p className="step-hint" role="alert" style={{ color: "#b3402a" }}>
-              {photoError}
-            </p>
-          )}
-        </>
+        <PhotoField template={template} slotId={photoSlot.id} frame={frame} />
       )}
       {textSlots.length > 0 && (
         <>

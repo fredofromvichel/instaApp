@@ -3,78 +3,122 @@ import {
   applyAdjustment,
   clampAdjustment,
   clampCrop,
-  computeCoverCrop,
+  computePhotoPlacement,
   containFit,
+  coversFrame,
   MAX_ZOOM,
+  MIN_ZOOM,
 } from "./geometry";
 import { DEFAULT_CROP, LOCKED } from "./types";
 
-describe("computeCoverCrop", () => {
-  it("shows the full image when aspect ratios match at zoom 1", () => {
-    expect(computeCoverCrop(1000, 1000, 500, 500, DEFAULT_CROP)).toEqual({
-      sx: 0,
-      sy: 0,
-      sw: 1000,
-      sh: 1000,
+const SQUARE = { x: 0, y: 0, w: 1000, h: 1000 };
+
+describe("computePhotoPlacement", () => {
+  it("fills the frame exactly when aspect ratios match at zoom 1", () => {
+    expect(
+      computePhotoPlacement(
+        1000,
+        1000,
+        { x: 0, y: 0, w: 500, h: 500 },
+        DEFAULT_CROP,
+      ),
+    ).toEqual({ x: 0, y: 0, w: 500, h: 500 });
+  });
+
+  it("center-crops a landscape image in a square frame", () => {
+    // coverScale = max(1000/2000, 1000/1000) = 1 → 2000×1000 centered
+    expect(computePhotoPlacement(2000, 1000, SQUARE, DEFAULT_CROP)).toEqual({
+      x: -500,
+      y: 0,
+      w: 2000,
+      h: 1000,
     });
   });
 
-  it("center-crops a landscape image into a square frame", () => {
-    // coverScale = max(1000/2000, 1000/1000) = 1 → visible 1000×1000, centered
-    expect(computeCoverCrop(2000, 1000, 1000, 1000, DEFAULT_CROP)).toEqual({
-      sx: 500,
-      sy: 0,
-      sw: 1000,
-      sh: 1000,
-    });
-  });
-
-  it("pans to the edges at offset -1 and +1, never beyond", () => {
-    const left = computeCoverCrop(2000, 1000, 1000, 1000, {
+  it("pans to the image edges at offset -1 and +1, never beyond", () => {
+    const left = computePhotoPlacement(2000, 1000, SQUARE, {
       zoom: 1,
       offsetX: -1,
       offsetY: 0,
     });
-    expect(left.sx).toBe(0);
-    const right = computeCoverCrop(2000, 1000, 1000, 1000, {
+    expect(left.x).toBe(0);
+    const right = computePhotoPlacement(2000, 1000, SQUARE, {
       zoom: 1,
       offsetX: 1,
       offsetY: 0,
     });
-    expect(right.sx).toBe(1000);
-    expect(right.sx + right.sw).toBe(2000);
+    expect(right.x + right.w).toBe(1000);
   });
 
-  it("shows less of the image when zoomed in", () => {
-    const zoomed = computeCoverCrop(2000, 1000, 1000, 1000, {
-      zoom: 2,
-      offsetX: 0,
-      offsetY: 0,
-    });
-    expect(zoomed).toEqual({ sx: 750, sy: 250, sw: 500, sh: 500 });
+  it("grows the image beyond the frame when zoomed in", () => {
+    expect(
+      computePhotoPlacement(2000, 1000, SQUARE, {
+        zoom: 2,
+        offsetX: 0,
+        offsetY: 0,
+      }),
+    ).toEqual({ x: -1500, y: -500, w: 4000, h: 2000 });
   });
 
-  it("keeps the visible rect inside the image for extreme values", () => {
-    const rect = computeCoverCrop(1200, 900, 1080, 640, {
+  it("keeps the frame covered for extreme values", () => {
+    const frame = { x: 0, y: 0, w: 1080, h: 640 };
+    const placement = computePhotoPlacement(1200, 900, frame, {
       zoom: 99,
       offsetX: 5,
       offsetY: -5,
     });
-    expect(rect.sx).toBeGreaterThanOrEqual(0);
-    expect(rect.sy).toBeGreaterThanOrEqual(0);
-    expect(rect.sx + rect.sw).toBeLessThanOrEqual(1200);
-    expect(rect.sy + rect.sh).toBeLessThanOrEqual(900);
+    expect(coversFrame(placement, frame)).toBe(true);
+  });
+
+  it("shrinks the image inside the frame below zoom 1, centered", () => {
+    // Square image in a square frame at half size: 500×500, centered.
+    const placement = computePhotoPlacement(1000, 1000, SQUARE, {
+      zoom: 0.5,
+      offsetX: 0,
+      offsetY: 0,
+    });
+    expect(placement).toEqual({ x: 250, y: 250, w: 500, h: 500 });
+    expect(coversFrame(placement, SQUARE)).toBe(false);
+  });
+
+  it("slides a shrunk image to the frame edges, never out of the frame", () => {
+    const topLeft = computePhotoPlacement(1000, 1000, SQUARE, {
+      zoom: 0.5,
+      offsetX: -1,
+      offsetY: -1,
+    });
+    expect(topLeft).toEqual({ x: 0, y: 0, w: 500, h: 500 });
+    const bottomRight = computePhotoPlacement(1000, 1000, SQUARE, {
+      zoom: 0.5,
+      offsetX: 9,
+      offsetY: 9,
+    });
+    expect(bottomRight).toEqual({ x: 500, y: 500, w: 500, h: 500 });
   });
 });
 
 describe("clampCrop", () => {
   it("clamps zoom and offsets to legal bounds", () => {
-    expect(clampCrop({ zoom: 0.2, offsetX: -7, offsetY: 7 })).toEqual({
-      zoom: 1,
+    expect(clampCrop({ zoom: 0.01, offsetX: -7, offsetY: 7 })).toEqual({
+      zoom: MIN_ZOOM,
       offsetX: -1,
       offsetY: 1,
     });
     expect(clampCrop({ zoom: 99, offsetX: 0, offsetY: 0 }).zoom).toBe(MAX_ZOOM);
+  });
+
+  it("allows zooming below the cover fit", () => {
+    expect(clampCrop({ zoom: 0.6, offsetX: 0, offsetY: 0 }).zoom).toBe(0.6);
+  });
+});
+
+describe("coversFrame", () => {
+  it("accepts an exact fit", () => {
+    expect(coversFrame(SQUARE, SQUARE)).toBe(true);
+  });
+
+  it("rejects a placement with a gap on one side", () => {
+    expect(coversFrame({ x: 10, y: 0, w: 1000, h: 1000 }, SQUARE)).toBe(false);
   });
 });
 
