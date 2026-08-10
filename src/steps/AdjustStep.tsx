@@ -674,17 +674,12 @@ export function AdjustStep() {
                           ["xy", "handle-corner"],
                         ] as const
                       ).map(([axis, cls]) => (
+                        // Drag-only affordance: the accessible path to the
+                        // same effect is the size buttons below the preview.
                         <span
                           key={axis}
                           className={`slot-handle ${cls}`}
-                          role="slider"
-                          aria-label={
-                            axis === "x"
-                              ? "Breite ändern"
-                              : axis === "y"
-                                ? "Höhe ändern"
-                                : "Größe ändern"
-                          }
+                          aria-hidden="true"
                           onPointerDown={(e) => onHandleDown(e, axis)}
                           onPointerMove={onHandleMove}
                           onPointerUp={onHandleUp}
