@@ -20,7 +20,7 @@ PNG straight to the photo library.
 
 ```sh
 npm install
-npm run dev        # dev server (dev-only deep links: /?step=content&format=square&template=hund-steckbrief)
+npm run dev        # dev server (dev-only deep links: /?step=content&format=square&template=steckbrief)
 npm run build      # type-check + production build to dist/
 npm run preview    # serve the production build
 npm run lint       # biome check .
@@ -50,15 +50,21 @@ Templates are declarative data — no rendering code needed:
 1. Read the schema in `src/engine/types.ts` (`Template`, `Slot`, `Palette`).
    Key ideas: every slot has explicit per-format `frames` (1080-based pixels);
    colors are semantic roles resolved through palettes; `guardrails` bound the
-   user's repositioning; `fixed` text slots render decorative captions;
-   `showWith` collapses captions with their companion slot.
-2. Add the template to the matching set in `src/templates/`
-   (`products.ts`, `quotes.ts`, `dogs.ts`) — or start a new file and register
-   it in `src/templates/catalog.ts`.
-3. Conventions: photo slot id `photo`, QR slot id `qr`, logo slot id `logo`
-   (the editing UI and brand-kit auto-offer key off these ids).
-4. Provide German `example` content for every text slot and 3–5 palettes —
-   catalog thumbnails render examples via `previewExamples`.
+   user's *sizing* (movement is bounded by the canvas alone); `fixed` text
+   slots render decorative captions; `showWith` collapses captions with their
+   companion slot.
+2. Add it to `src/templates/single.ts` or `pages.ts` (two-page/carousel) and
+   register it in `src/templates/catalog.ts`.
+3. **Slot id conventions carry the content** — a template is a mapping, not a
+   form: `title1`, `text1`, `title2`, `text2` are the four universal fields the
+   user filled in before choosing a template, and every template must give all
+   four a home (enforced by `frames.test.ts`). On two-page templates everything
+   numbered "2" belongs on page 2 (`onPage2()`). Any other editable text slot
+   id becomes a template extra, edited in "Anpassen". Photo/QR/logo slot ids are
+   `photo`, `qr`, `logo` (the editing UI and brand-kit auto-offer key off them).
+4. Use the shared `PALETTES` (one set for all templates, so the user's color
+   choice survives a template switch) and give every text slot German `example`
+   content — the picker renders examples via `previewExamples`.
 5. Check it in the dev server in all three formats:
    `/?step=download&format=story&template=<id>` etc.
 
@@ -66,7 +72,7 @@ Templates are declarative data — no rendering code needed:
 
 ```
 src/engine/     schema types, geometry/text math (pure, tested), canvas renderer, PNG export
-src/templates/  template sets + catalog registry
+src/templates/  templates (single/two-page), shared palettes + catalog registry
 src/state/      wizard reducer/context, brand kit context
 src/steps/      the five wizard screens
 src/components/ preview canvas, form fields, drafts, brand sheet, onboarding

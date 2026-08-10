@@ -65,20 +65,24 @@ export interface Frame {
 }
 
 /**
- * Limits for the user's light repositioning of a slot (SPEC.md §4).
- * Offsets are in canvas pixels from the template default; scale is relative.
+ * Limits for the user's repositioning of a slot (SPEC.md §4).
+ *
+ * Movable slots may be dragged anywhere on the canvas — out of their frame and
+ * even partly past the image edge. The only limit is that a slot can never
+ * disappear completely (`clampAdjustment` keeps a share of it on canvas), so
+ * "lost" elements cannot happen. Scale stays bounded per slot, which is what
+ * keeps QR codes scannable and text legible.
  */
 export interface Guardrails {
-  maxOffsetX: number;
-  maxOffsetY: number;
+  /** May the user move this slot at all? Decoration stays put. */
+  movable: boolean;
   minScale: number;
   maxScale: number;
 }
 
 /** Immovable slot — the default when a slot declares no guardrails. */
 export const LOCKED: Guardrails = {
-  maxOffsetX: 0,
-  maxOffsetY: 0,
+  movable: false,
   minScale: 1,
   maxScale: 1,
 };
@@ -212,15 +216,39 @@ export interface TemplateVariant {
   overrides: Record<string, SlotVariantOverride>;
 }
 
-/* ---------------------------------------------------------------- template */
+/* ----------------------------------------------------------------- content */
 
-export type TemplateCategory = "products" | "quotes" | "dogs" | "team";
+/**
+ * The universal content fields (SPEC.md §3/§5). The user fills these in
+ * *before* choosing a template; every template maps them onto its own design,
+ * which is what lets her flip through all templates with her real content.
+ *
+ * A text slot carrying one of these ids is fed by that field. On two-page
+ * templates everything numbered "2" belongs to the second image.
+ */
+export const CONTENT_SLOT_IDS = ["title1", "text1", "title2", "text2"] as const;
+
+export type ContentSlotId = (typeof CONTENT_SLOT_IDS)[number];
+
+export const CONTENT_LABELS: Record<ContentSlotId, string> = {
+  title1: "Überschrift 1",
+  text1: "Beschreibungstext 1",
+  title2: "Überschrift 2",
+  text2: "Beschreibungstext 2",
+};
+
+export function isContentSlot(id: string): id is ContentSlotId {
+  return (CONTENT_SLOT_IDS as readonly string[]).includes(id);
+}
+
+/* ---------------------------------------------------------------- template */
 
 export interface Template {
   id: string;
   /** German display name. */
   name: string;
-  category: TemplateCategory;
+  /** One-line German hint under the name in the picker ("Für Angebote"). */
+  hint: string;
   /** First palette is the default. */
   palettes: Palette[];
   /** Draw order = array order (background first). */
@@ -290,9 +318,24 @@ export interface ImageValue {
   height: number;
 }
 
+/**
+ * Font families the user may switch a single text field to (SPEC.md §6).
+ * "vorlage" keeps whatever the template chose — the default everywhere.
+ */
+export type FontChoice =
+  | "vorlage"
+  | "modern"
+  | "elegant"
+  | "kraeftig"
+  | "handschrift";
+
 export interface TextValue {
   type: "text";
   text: string;
+  /** Per-field formatting; absent = the template's own styling. */
+  bold?: boolean;
+  italic?: boolean;
+  font?: FontChoice;
 }
 
 export type SlotValue = PhotoValue | ImageValue | TextValue;

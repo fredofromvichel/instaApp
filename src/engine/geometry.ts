@@ -81,15 +81,57 @@ export function coversFrame(placement: Frame, frame: Frame): boolean {
   );
 }
 
-/** Clamp a user adjustment to a slot's guardrails. */
+/**
+ * Share of a movable element that must stay on the canvas. Below this it
+ * would be effectively invisible — and an invisible element is one the user
+ * cannot grab back.
+ */
+export const MIN_ON_CANVAS = 0.35;
+
+/**
+ * Clamp a user adjustment (SPEC.md §4, "frei, aber mit Netz").
+ *
+ * Movable slots may be dragged anywhere in `bounds` — out of their template
+ * frame, overlapping other elements, even hanging over the image edge. The
+ * single hard rule is that `MIN_ON_CANVAS` of the element stays inside, so
+ * nothing can be lost off-screen. Scale stays within the slot's own range.
+ *
+ * `bounds` is the canvas (for carousels: the full N×-wide space), `frame` the
+ * slot's template frame for the current format.
+ */
 export function clampAdjustment(
   adjustment: SlotAdjustment,
   guardrails: Guardrails,
+  frame: Frame,
+  bounds: Frame,
 ): SlotAdjustment {
+  const scale = clamp(
+    adjustment.scale,
+    guardrails.minScale,
+    guardrails.maxScale,
+  );
+  if (!guardrails.movable) return { dx: 0, dy: 0, scale };
+
+  // Where the scaled frame sits before translation (applyAdjustment scales
+  // about the frame center).
+  const w = frame.w * scale;
+  const h = frame.h * scale;
+  const baseX = frame.x + (frame.w - w) / 2;
+  const baseY = frame.y + (frame.h - h) / 2;
+  const keepX = Math.min(w, bounds.w) * MIN_ON_CANVAS;
+  const keepY = Math.min(h, bounds.h) * MIN_ON_CANVAS;
   return {
-    dx: clamp(adjustment.dx, -guardrails.maxOffsetX, guardrails.maxOffsetX),
-    dy: clamp(adjustment.dy, -guardrails.maxOffsetY, guardrails.maxOffsetY),
-    scale: clamp(adjustment.scale, guardrails.minScale, guardrails.maxScale),
+    dx: clamp(
+      adjustment.dx,
+      bounds.x + keepX - w - baseX,
+      bounds.x + bounds.w - keepX - baseX,
+    ),
+    dy: clamp(
+      adjustment.dy,
+      bounds.y + keepY - h - baseY,
+      bounds.y + bounds.h - keepY - baseY,
+    ),
+    scale,
   };
 }
 

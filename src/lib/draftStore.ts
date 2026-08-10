@@ -3,9 +3,15 @@
  * images as blobs) into IndexedDB and back. Autosave keeps exactly one draft
  * per session id; the list is capped to the newest MAX_DRAFTS.
  */
-import type { SlotAdjustment, SlotValue } from "../engine/types";
+import type {
+  ContentSlotId,
+  SlotAdjustment,
+  SlotValue,
+  TextValue,
+} from "../engine/types";
 import type { WizardState } from "../state/wizard";
 import { STEPS } from "../state/wizard";
+import { getTemplate } from "../templates/catalog";
 import { idbDelete, idbGet, idbGetAll, idbPut } from "./db";
 
 export const MAX_DRAFTS = 10;
@@ -28,7 +34,8 @@ export function newDraftSession(): void {
 }
 
 type StoredValue =
-  | { type: "text"; text: string }
+  // Text keeps its per-field formatting (bold/italic/font).
+  | TextValue
   | {
       type: "photo";
       blob: Blob;
@@ -146,6 +153,32 @@ export async function serializeState(state: WizardState): Promise<StoredState> {
   };
 }
 
+/**
+ * Where the old per-template fields live now. Drafts written before the
+ * universal content fields existed keep their texts this way instead of
+ * silently losing them; their template ids are gone, so the reopened draft
+ * lands on the template picker with all its content intact.
+ */
+const LEGACY_TEXT_IDS: Record<ContentSlotId, string[]> = {
+  title1: ["headline", "quote", "name", "title"],
+  text1: ["description", "body", "story", "about"],
+  title2: ["price", "eyebrow", "subline", "date", "role"],
+  text2: ["author", "traits", "facts"],
+};
+
+function migrateLegacyTexts(values: WizardState["values"]): void {
+  for (const [slotId, legacyIds] of Object.entries(LEGACY_TEXT_IDS)) {
+    if (values[slotId]?.type === "text") continue;
+    for (const legacyId of legacyIds) {
+      const legacy = values[legacyId];
+      if (legacy?.type === "text" && legacy.text.trim() !== "") {
+        values[slotId] = legacy;
+        break;
+      }
+    }
+  }
+}
+
 export async function deserializeState(
   stored: StoredState,
 ): Promise<WizardState> {
@@ -153,14 +186,26 @@ export async function deserializeState(
   for (const [slotId, value] of Object.entries(stored.values)) {
     values[slotId] = await deserializeValue(value);
   }
+  migrateLegacyTexts(values);
+  // A draft may name a template that no longer exists (the catalog shrank
+  // from 16 to 8). Send it back to the picker rather than to an empty screen.
+  const templateId =
+    stored.templateId && getTemplate(stored.templateId)
+      ? stored.templateId
+      : null;
+  const step = STEPS.includes(stored.step) ? stored.step : "format";
   return {
-    step: STEPS.includes(stored.step) ? stored.step : "format",
+    step:
+      !templateId && (step === "adjust" || step === "download")
+        ? "template"
+        : step,
     formatId: stored.formatId,
-    templateId: stored.templateId,
+    templateId,
     paletteId: stored.paletteId,
     variantId: stored.variantId ?? null,
     values,
-    adjustments: stored.adjustments ?? {},
+    // Placements were made against the old template's frames.
+    adjustments: templateId ? (stored.adjustments ?? {}) : {},
   };
 }
 

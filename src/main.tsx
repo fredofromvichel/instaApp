@@ -1,3 +1,6 @@
+// The four families the user can switch a text field to (engine/fonts.ts).
+import "@fontsource-variable/archivo";
+import "@fontsource-variable/caveat";
 import "@fontsource-variable/fraunces";
 import "@fontsource-variable/outfit";
 import { StrictMode } from "react";

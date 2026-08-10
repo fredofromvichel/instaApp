@@ -50,12 +50,11 @@ export function DownloadStep() {
 
   const fileBase = useMemo(() => {
     if (!template) return "post";
-    // Prefer the first user-entered text (e.g. dog name/headline) for the name.
-    const firstText = template.slots.find(
-      (slot) => slot.type === "text" && state.values[slot.id]?.type === "text",
-    );
-    const value = firstText ? state.values[firstText.id] : undefined;
-    const base = value?.type === "text" ? value.text : template.name;
+    // Prefer the headline the user typed; a value carrying only formatting
+    // (no text) is not a name.
+    const value = state.values.title1;
+    const typed = value?.type === "text" ? value.text.trim() : "";
+    const base = typed !== "" ? typed : template.name;
     const date = new Date().toISOString().slice(0, 10);
     return `${slugify(base)}-${date}`;
   }, [template, state.values]);
@@ -72,12 +71,11 @@ export function DownloadStep() {
   const chosenFormatId = state.formatId;
   const otherFormats = POST_FORMATS.filter((f) => f.id !== chosenFormatId);
 
-  const untouchedTexts = template.slots.filter(
-    (slot) =>
-      slot.type === "text" &&
-      !slot.optional &&
-      state.values[slot.id]?.type !== "text",
-  );
+  const untouchedTexts = template.slots.filter((slot) => {
+    if (slot.type !== "text" || slot.optional || slot.fixed) return false;
+    const value = state.values[slot.id];
+    return value?.type !== "text" || value.text.trim() === "";
+  });
 
   function namesFor(formatId: FormatId): string[] {
     const formatSuffix =

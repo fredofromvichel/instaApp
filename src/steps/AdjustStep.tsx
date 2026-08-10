@@ -1,17 +1,36 @@
 /**
- * Step 4: Anpassen (task 08).
- * - Palette chips: tap to re-color the whole design.
- * - Light repositioning: tap an adjustable element → outline appears → drag
- *   to nudge, pinch to resize. Every change goes through clampAdjustment, so
- *   a broken layout is impossible by construction.
- * - Undo (last gestures) and reset (per element / whole design).
+ * Step 4: Anpassen.
+ *
+ * - Farben / Stil: curated palettes and the template's style variants.
+ * - Feinschliff: tap an element → drag it anywhere, pinch (or the buttons) to
+ *   resize. Placement is free; `clampAdjustment` only guarantees that nothing
+ *   can be lost off-canvas (SPEC.md §4).
+ * - Text: bold, italic and a choice of four fonts, per field.
+ * - Photo: switch between moving its frame and choosing the visible crop.
+ * - Extra fields: text slots a template adds on top of the four universal ones
+ *   (the Steckbrief's Alter/Rasse/…).
  */
 import { useRef, useState } from "react";
 import { PostPreview } from "../components/PostPreview";
+import { TextField } from "../components/TextField";
+import { FONT_OPTIONS } from "../engine/fonts";
 import { clampAdjustment } from "../engine/geometry";
-import { effectiveFrame } from "../engine/render";
-import type { SlotAdjustment, Template } from "../engine/types";
-import { IDENTITY_ADJUSTMENT, LOCKED, templateSlides } from "../engine/types";
+import { canvasBounds, effectiveFrame } from "../engine/render";
+import type {
+  FontChoice,
+  PhotoValue,
+  SlotAdjustment,
+  Template,
+  TextSlot,
+  TextValue,
+} from "../engine/types";
+import {
+  IDENTITY_ADJUSTMENT,
+  isContentSlot,
+  LOCKED,
+  templateSlides,
+} from "../engine/types";
+import { panCrop, zoomCrop } from "../lib/cropGestures";
 import { getFormat } from "../lib/formats";
 import { findAdjustableSlotAt } from "../lib/hitTest";
 import { brandPalettesFor, buildRenderInput } from "../lib/renderInput";
@@ -19,12 +38,18 @@ import { useBrand } from "../state/brand";
 import { useWizard } from "../state/wizard";
 import { getTemplate } from "../templates/catalog";
 
+/** One tap on a size button. */
+const SIZE_STEP = 1.12;
+
 interface GestureState {
   pointers: Map<number, { x: number; y: number }>;
   lastDistance: number | null;
   moved: boolean;
   historyPushed: boolean;
 }
+
+/** What a drag on the selected photo does. */
+type PhotoMode = "frame" | "crop";
 
 function VariantChips({ template }: { template: Template }) {
   const { state, dispatch } = useWizard();
@@ -83,10 +108,66 @@ function PaletteChips({ template }: { template: Template }) {
   );
 }
 
+/** Bold / italic / font for the selected text field. */
+function TextStyleControls({ slot }: { slot: TextSlot }) {
+  const { state, dispatch } = useWizard();
+  const value = state.values[slot.id];
+  const current: TextValue =
+    value?.type === "text" ? value : { type: "text", text: "" };
+
+  function update(patch: Partial<TextValue>) {
+    // A styled-but-empty field would render nothing; keep the example text
+    // visible by storing the style on the (still empty) value.
+    dispatch({
+      type: "setValue",
+      slotId: slot.id,
+      value: { ...current, ...patch, type: "text" },
+    });
+  }
+
+  const activeFont: FontChoice = current.font ?? "vorlage";
+  return (
+    <>
+      <div className="button-row">
+        <button
+          type="button"
+          className={`button-secondary ${current.bold ? "is-active" : ""}`}
+          aria-pressed={current.bold === true}
+          onClick={() => update({ bold: !current.bold })}
+        >
+          <b>Fett</b>
+        </button>
+        <button
+          type="button"
+          className={`button-secondary ${current.italic ? "is-active" : ""}`}
+          aria-pressed={current.italic === true}
+          onClick={() => update({ italic: !current.italic })}
+        >
+          <i>Kursiv</i>
+        </button>
+      </div>
+      <div className="chip-row">
+        {FONT_OPTIONS.map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            className={`chip ${option.id === activeFont ? "selected" : ""}`}
+            style={option.family ? { fontFamily: option.family } : undefined}
+            onClick={() => update({ font: option.id })}
+          >
+            {option.name}
+          </button>
+        ))}
+      </div>
+    </>
+  );
+}
+
 export function AdjustStep() {
   const { state, dispatch } = useWizard();
   const { kit } = useBrand();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [photoMode, setPhotoMode] = useState<PhotoMode>("frame");
   const wrapperRef = useRef<HTMLDivElement>(null);
   const gesture = useRef<GestureState>({
     pointers: new Map(),
@@ -110,8 +191,19 @@ export function AdjustStep() {
   const formatId = state.formatId;
   const format = getFormat(formatId);
   const slides = templateSlides(template);
-  const hasAdjustable = template.slots.some((slot) => slot.guardrails);
+  const bounds = canvasBounds(template, formatId);
   const selectedSlot = template.slots.find((slot) => slot.id === selectedId);
+  const selectedText =
+    selectedSlot?.type === "text" && !selectedSlot.fixed ? selectedSlot : null;
+  const photoValue = state.values.photo;
+  const isPhotoSelected = selectedSlot?.type === "photo";
+  const cropping = isPhotoSelected && photoMode === "crop";
+
+  /** Extra text fields this template adds beyond the four universal ones. */
+  const extraFields = template.slots.filter(
+    (slot): slot is TextSlot =>
+      slot.type === "text" && !slot.fixed && !isContentSlot(slot.id),
+  );
 
   /**
    * Screen (CSS px) → canvas coordinates. Carousel previews show one canvas
@@ -151,13 +243,24 @@ export function AdjustStep() {
     update: (current: SlotAdjustment) => SlotAdjustment,
   ) {
     const slot = template?.slots.find((s) => s.id === slotId);
-    if (!slot) return;
+    if (!slot || !template) return;
     const current = state.adjustments[slotId] ?? IDENTITY_ADJUSTMENT;
     dispatch({
       type: "setAdjustment",
       slotId,
-      adjustment: clampAdjustment(update(current), slot.guardrails ?? LOCKED),
+      adjustment: clampAdjustment(
+        update(current),
+        slot.guardrails ?? LOCKED,
+        slot.frames[formatId],
+        bounds,
+      ),
     });
+  }
+
+  /** Pan/zoom the photo inside its box (only in "Ausschnitt" mode). */
+  function updateCrop(update: (value: PhotoValue) => PhotoValue) {
+    if (photoValue?.type !== "photo") return;
+    dispatch({ type: "setValue", slotId: "photo", value: update(photoValue) });
   }
 
   function onPointerDown(event: React.PointerEvent) {
@@ -180,13 +283,34 @@ export function AdjustStep() {
     pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
 
     const point = toCanvasPoint(event.clientX, event.clientY);
-    if (!point || !selectedId) return;
+    if (!point || !selectedId || !selectedSlot) return;
 
     if (pointers.size === 1) {
       const dx = (event.clientX - previous.x) * point.scale;
       const dy = (event.clientY - previous.y) * point.scale;
       if (Math.abs(dx) + Math.abs(dy) > 2) gesture.current.moved = true;
       if (!gesture.current.moved) return;
+      if (cropping && template) {
+        const frame = effectiveFrame(
+          selectedSlot,
+          template,
+          formatId,
+          state.adjustments,
+        );
+        updateCrop((value) => ({
+          ...value,
+          crop: panCrop(
+            value.crop,
+            dx,
+            dy,
+            value.width,
+            value.height,
+            frame.w,
+            frame.h,
+          ),
+        }));
+        return;
+      }
       pushHistory();
       updateAdjustment(selectedId, (a) => ({
         ...a,
@@ -200,11 +324,18 @@ export function AdjustStep() {
       const last = gesture.current.lastDistance;
       if (last !== null && last > 0) {
         gesture.current.moved = true;
-        pushHistory();
-        updateAdjustment(selectedId, (adj) => ({
-          ...adj,
-          scale: adj.scale * (distance / last),
-        }));
+        if (cropping) {
+          updateCrop((value) => ({
+            ...value,
+            crop: zoomCrop(value.crop, distance / last),
+          }));
+        } else {
+          pushHistory();
+          updateAdjustment(selectedId, (adj) => ({
+            ...adj,
+            scale: adj.scale * (distance / last),
+          }));
+        }
       }
       gesture.current.lastDistance = distance;
     }
@@ -219,15 +350,15 @@ export function AdjustStep() {
       if (!template) return;
       const point = toCanvasPoint(event.clientX, event.clientY);
       if (point) {
-        setSelectedId(
-          findAdjustableSlotAt(
-            template,
-            formatId,
-            state.adjustments,
-            point.x,
-            point.y,
-          ),
+        const hit = findAdjustableSlotAt(
+          template,
+          formatId,
+          state.adjustments,
+          point.x,
+          point.y,
         );
+        setSelectedId(hit);
+        setPhotoMode("frame");
       }
     }
   }
@@ -245,42 +376,44 @@ export function AdjustStep() {
     dispatch({ type: "setAdjustment", slotId: selectedId, adjustment: null });
   }
 
+  function resetAll() {
+    pushHistory();
+    gesture.current.historyPushed = false;
+    dispatch({ type: "setAllAdjustments", adjustments: {} });
+  }
+
   /** One tap on a size button = one undoable step. */
   function stepSize(factor: number) {
     if (!selectedId) return;
     gesture.current.historyPushed = false;
+    if (cropping) {
+      updateCrop((value) => ({ ...value, crop: zoomCrop(value.crop, factor) }));
+      return;
+    }
     pushHistory();
     updateAdjustment(selectedId, (a) => ({ ...a, scale: a.scale * factor }));
   }
 
-  const selectionFrame = selectedSlot
-    ? effectiveFrame(selectedSlot, formatId, state.adjustments)
-    : null;
-
-  // "Kleiner/Größer" buttons: an easier alternative to two-finger pinch.
   const rails = selectedSlot?.guardrails;
-  const canResize = !!rails && (rails.minScale < 1 || rails.maxScale > 1);
   const currentScale = selectedId
     ? (state.adjustments[selectedId]?.scale ?? 1)
     : 1;
+  const hasAdjustments = Object.keys(state.adjustments).length > 0;
 
   return (
     <>
       <h2 className="form-section-title">Farben</h2>
       <PaletteChips template={template} />
       <VariantChips template={template} />
-      {hasAdjustable && (
-        <>
-          <h2 className="form-section-title">Feinschliff</h2>
-          <p className="step-hint">
-            {selectedSlot
-              ? canResize
-                ? "Ziehe das Element an seinen Platz. Die Größe änderst du mit den Knöpfen unten – oder mit zwei Fingern."
-                : "Ziehe das Element an seinen Platz."
-              : "Tippe auf ein Element mit gestricheltem Rahmen, um es zu verschieben."}
-          </p>
-        </>
-      )}
+
+      <h2 className="form-section-title">Feinschliff</h2>
+      <p className="step-hint">
+        {selectedSlot
+          ? cropping
+            ? "Ziehe am Bild, um den Ausschnitt zu wählen."
+            : "Ziehe das Element an seinen Platz – auch über den Rand hinaus."
+          : "Tippe auf ein Element mit gestricheltem Rahmen, um es zu bewegen."}
+      </p>
       <div
         ref={wrapperRef}
         className={`post-preview adjust-preview ${slides > 1 ? "is-carousel" : ""}`}
@@ -304,11 +437,16 @@ export function AdjustStep() {
                   : `Vorschau Bild ${slide + 1} von ${slides}`
               }
             />
-            {/* Dashed hints on adjustable elements; solid outline when selected. */}
+            {/* Dashed hints on movable elements; solid outline when selected. */}
             {template.slots
-              .filter((slot) => slot.guardrails)
+              .filter((slot) => slot.guardrails?.movable)
               .map((slot) => {
-                const frame = effectiveFrame(slot, formatId, state.adjustments);
+                const frame = effectiveFrame(
+                  slot,
+                  template,
+                  formatId,
+                  state.adjustments,
+                );
                 // Skip outlines that lie entirely on another slide.
                 const left = frame.x - slide * format.width;
                 if (left + frame.w <= 0 || left >= format.width) return null;
@@ -328,45 +466,82 @@ export function AdjustStep() {
           </div>
         ))}
       </div>
-      {canResize && rails && (
+
+      {isPhotoSelected && (
+        <div className="chip-row">
+          <button
+            type="button"
+            className={`chip ${photoMode === "frame" ? "selected" : ""}`}
+            onClick={() => setPhotoMode("frame")}
+          >
+            Rahmen bewegen
+          </button>
+          <button
+            type="button"
+            className={`chip ${photoMode === "crop" ? "selected" : ""}`}
+            onClick={() => setPhotoMode("crop")}
+          >
+            Bildausschnitt
+          </button>
+        </div>
+      )}
+
+      {selectedSlot && rails && (
         <div className="button-row">
           <button
             type="button"
             className="button-secondary"
-            disabled={currentScale <= rails.minScale * 1.001}
-            onClick={() => stepSize(0.9)}
+            disabled={!cropping && currentScale <= rails.minScale * 1.001}
+            onClick={() => stepSize(1 / SIZE_STEP)}
           >
             − Kleiner
           </button>
           <button
             type="button"
             className="button-secondary"
-            disabled={currentScale >= rails.maxScale * 0.999}
-            onClick={() => stepSize(1.1)}
+            disabled={!cropping && currentScale >= rails.maxScale * 0.999}
+            onClick={() => stepSize(SIZE_STEP)}
           >
             + Größer
           </button>
         </div>
       )}
-      {hasAdjustable && (
-        <div className="button-row">
-          <button
-            type="button"
-            className="button-secondary"
-            disabled={historySize === 0}
-            onClick={undo}
-          >
-            ↩︎ Rückgängig
-          </button>
-          <button
-            type="button"
-            className="button-secondary"
-            disabled={!selectionFrame}
-            onClick={resetSelected}
-          >
-            Zurücksetzen
-          </button>
-        </div>
+
+      {selectedText && <TextStyleControls slot={selectedText} />}
+
+      <div className="button-row">
+        <button
+          type="button"
+          className="button-secondary"
+          disabled={historySize === 0}
+          onClick={undo}
+        >
+          ↩︎ Rückgängig
+        </button>
+        <button
+          type="button"
+          className="button-secondary"
+          disabled={!selectedId}
+          onClick={resetSelected}
+        >
+          Element zurück
+        </button>
+      </div>
+      {hasAdjustments && (
+        <button type="button" className="button-link" onClick={resetAll}>
+          Alles wieder an seinen Platz
+        </button>
+      )}
+
+      {extraFields.length > 0 && (
+        <>
+          <h2 className="form-section-title">
+            Zusätzliche Felder für diese Vorlage
+          </h2>
+          {extraFields.map((slot) => (
+            <TextField key={slot.id} slot={slot} />
+          ))}
+        </>
       )}
     </>
   );

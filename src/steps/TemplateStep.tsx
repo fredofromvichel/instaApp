@@ -1,80 +1,51 @@
-/** Step 2: Vorlage wählen — category tabs + preview grid with live thumbnails. */
-import { useState } from "react";
+/**
+ * Step 3: Vorlage wählen — eight designs, each previewed with the content the
+ * user just entered (SPEC.md §3). No category tabs: with eight templates a
+ * single grid is faster to scan than any grouping, and the point is to compare
+ * them all against the same content.
+ */
 import { PostPreview } from "../components/PostPreview";
-import type { TemplateCategory } from "../engine/types";
+import { buildRenderInput } from "../lib/renderInput";
+import { useBrand } from "../state/brand";
 import { useWizard } from "../state/wizard";
-import {
-  CATEGORIES,
-  CATEGORY_LABELS,
-  templatesByCategory,
-} from "../templates/catalog";
+import { TEMPLATES } from "../templates/catalog";
 
 export function TemplateStep() {
   const { state, dispatch } = useWizard();
-  const [category, setCategory] = useState<TemplateCategory>(() => {
-    if (import.meta.env.DEV) {
-      const param = new URLSearchParams(window.location.search).get("category");
-      if (param === "quotes" || param === "dogs" || param === "team")
-        return param;
-    }
-    return "products";
-  });
-  const templates = templatesByCategory(category);
-  const formatId = state.formatId ?? "square";
+  const { kit } = useBrand();
 
   return (
     <>
       <p className="step-hint">
-        Such dir eine Vorlage aus – anpassen kannst du gleich alles.
+        Deine Texte sind schon drin – tippe dich durch und nimm, was dir am
+        besten gefällt.
       </p>
-      <div className="chip-row" role="tablist">
-        {CATEGORIES.map((c) => (
+      <div className="card-grid template-grid">
+        {TEMPLATES.map((template) => (
           <button
-            key={c}
+            key={template.id}
             type="button"
-            role="tab"
-            aria-selected={c === category}
-            className={`chip ${c === category ? "selected" : ""}`}
-            onClick={() => setCategory(c)}
+            className={`select-card template-card ${
+              state.templateId === template.id ? "selected" : ""
+            }`}
+            onClick={() =>
+              dispatch({ type: "chooseTemplate", templateId: template.id })
+            }
           >
-            {CATEGORY_LABELS[c]}
+            <PostPreview
+              input={{
+                ...buildRenderInput(state, template, kit),
+                // Empty fields fall back to the template's example content, so
+                // a half-filled draft still previews as a finished design.
+                previewExamples: true,
+              }}
+              ariaLabel={`Vorlage ${template.name}`}
+            />
+            <span className="card-title">{template.name}</span>
+            <span className="card-caption">{template.hint}</span>
           </button>
         ))}
       </div>
-      {templates.length === 0 ? (
-        <div className="empty-state">
-          <p style={{ margin: 0, fontWeight: 600 }}>Hier kommt bald etwas!</p>
-          <p style={{ margin: "8px 0 0" }}>
-            Vorlagen für „{CATEGORY_LABELS[category]}“ sind schon in Arbeit.
-          </p>
-        </div>
-      ) : (
-        <div className="card-grid template-grid">
-          {templates.map((template) => (
-            <button
-              key={template.id}
-              type="button"
-              className={`select-card template-card ${
-                state.templateId === template.id ? "selected" : ""
-              }`}
-              onClick={() =>
-                dispatch({ type: "chooseTemplate", templateId: template.id })
-              }
-            >
-              <PostPreview
-                input={{
-                  template,
-                  formatId,
-                  values: {},
-                  previewExamples: true,
-                }}
-                ariaLabel={`Vorlage ${template.name}`}
-              />
-              <span className="card-title">{template.name}</span>
-            </button>
-          ))}
-        </div>
-      )}
     </>
   );
 }

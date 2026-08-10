@@ -4,7 +4,11 @@
  * what catches typos in the 2160-wide carousel coordinate space.
  */
 import { describe, expect, it } from "vitest";
-import { activeVariant, templateSlides } from "../engine/types";
+import {
+  activeVariant,
+  CONTENT_SLOT_IDS,
+  templateSlides,
+} from "../engine/types";
 import { POST_FORMATS } from "../lib/formats";
 import { getTemplate, TEMPLATES } from "./catalog";
 
@@ -47,7 +51,7 @@ describe("template style variants", () => {
   }
 
   it("falls back to the first (default) variant for unknown ids", () => {
-    const template = getTemplate("produkt-klassik");
+    const template = getTemplate("klassik");
     expect(template).toBeDefined();
     if (!template) return;
     expect(activeVariant(template, undefined)?.id).toBe(
@@ -62,12 +66,50 @@ describe("template style variants", () => {
 
 describe("templateSlides", () => {
   it("defaults to a single image", () => {
-    const single = getTemplate("hund-steckbrief");
+    const single = getTemplate("steckbrief");
     expect(single && templateSlides(single)).toBe(1);
   });
 
   it("reports both slides of the carousel template", () => {
-    const carousel = getTemplate("hund-karussell");
+    const carousel = getTemplate("panorama");
     expect(carousel && templateSlides(carousel)).toBe(2);
   });
+});
+
+describe("universal content fields", () => {
+  it("offers exactly eight templates", () => {
+    expect(TEMPLATES).toHaveLength(8);
+  });
+
+  for (const template of TEMPLATES) {
+    it(`${template.id}: has a place for every content field`, () => {
+      const textSlots = new Set(
+        template.slots.filter((s) => s.type === "text").map((s) => s.id),
+      );
+      for (const id of CONTENT_SLOT_IDS) {
+        expect(textSlots.has(id), `${template.id} → ${id}`).toBe(true);
+      }
+    });
+
+    it(`${template.id}: names and hints are filled in`, () => {
+      expect(template.name.length).toBeGreaterThan(0);
+      expect(template.hint.length).toBeGreaterThan(0);
+    });
+  }
+});
+
+describe("two-page templates", () => {
+  for (const template of TEMPLATES.filter((t) => templateSlides(t) === 2)) {
+    it(`${template.id}: everything numbered 2 sits on page two`, () => {
+      for (const slot of template.slots) {
+        if (slot.id !== "title2" && slot.id !== "text2") continue;
+        for (const format of POST_FORMATS) {
+          expect(
+            slot.frames[format.id].x,
+            `${slot.id} (${format.id})`,
+          ).toBeGreaterThanOrEqual(format.width);
+        }
+      }
+    });
+  }
 });
