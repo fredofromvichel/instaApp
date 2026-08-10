@@ -27,9 +27,9 @@ describe("findAdjustableSlotAt", () => {
   });
 
   it("ignores locked decoration", () => {
-    // Bottom-left of the panel: only the (locked) panel and background are
-    // there, so nothing is selectable.
-    expect(findAdjustableSlotAt(template, "square", {}, 540, 1070)).toBeNull();
+    // Bottom-right corner of the panel: past the text block and past the QR,
+    // so only the (locked) panel and background are there.
+    expect(findAdjustableSlotAt(template, "square", {}, 1064, 1076)).toBeNull();
   });
 
   it("respects the element's current adjustment", () => {

@@ -3,8 +3,61 @@
  * Opened from the start screen; everything stays on the device.
  */
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
-import { MAX_BRAND_COLORS } from "../lib/brandStore";
+import type { BrandColors } from "../lib/brandPalette";
+import { deriveBrandPalette } from "../lib/brandPalette";
 import { useBrand } from "../state/brand";
+import { PALETTES } from "../templates/palettes";
+
+/**
+ * The three color slots, in the order they matter. Each one is optional; what
+ * the user leaves out is derived (brandPalette.ts), and the preview below
+ * shows exactly what the result will look like.
+ */
+const COLOR_SLOTS: {
+  key: keyof BrandColors;
+  label: string;
+  hint: string;
+}[] = [
+  {
+    key: "background",
+    label: "1. Hintergrund",
+    hint: "Die große Fläche hinter allem.",
+  },
+  {
+    key: "accent",
+    label: "2. Flächen & Akzente",
+    hint: "Preis-Schilder, Rahmen, kleine Hervorhebungen.",
+  },
+  {
+    key: "text",
+    label: "3. Schrift",
+    hint: "Deine Textfarbe.",
+  },
+];
+
+/** Shows what the three colors turn into — including the derived ones. */
+function BrandPreview({ colors }: { colors: BrandColors }) {
+  const base = PALETTES[0];
+  const palette = base ? deriveBrandPalette(base, colors) : null;
+  if (!palette) return null;
+  const c = palette.colors;
+  return (
+    <div className="brand-preview" style={{ background: c.background }}>
+      <div className="brand-preview-card" style={{ background: c.surface }}>
+        <span style={{ color: c.text, fontWeight: 700 }}>Überschrift</span>
+        <span style={{ color: c.muted, fontSize: "0.85rem" }}>
+          Ein Beschreibungstext.
+        </span>
+        <span
+          className="brand-preview-chip"
+          style={{ background: c.accent, color: c.textOnAccent }}
+        >
+          4,50 €
+        </span>
+      </div>
+    </div>
+  );
+}
 
 export function BrandKitSheet({ onClose }: { onClose: () => void }) {
   const { kit, update } = useBrand();
@@ -41,14 +94,11 @@ export function BrandKitSheet({ onClose }: { onClose: () => void }) {
     }
   }
 
-  function addColor(color: string) {
-    if (kit.colors.includes(color) || kit.colors.length >= MAX_BRAND_COLORS)
-      return;
-    update({ ...kit, colors: [...kit.colors, color] });
-  }
-
-  function removeColor(color: string) {
-    update({ ...kit, colors: kit.colors.filter((c) => c !== color) });
+  function setColor(key: keyof BrandColors, color: string | undefined) {
+    const colors = { ...kit.colors };
+    if (color) colors[key] = color;
+    else delete colors[key];
+    update({ ...kit, colors });
   }
 
   return (
@@ -95,34 +145,42 @@ export function BrandKitSheet({ onClose }: { onClose: () => void }) {
         )}
 
         <h3 className="form-section-title">Deine Farben</h3>
-        <div className="swatch-row">
-          {kit.colors.map((color) => (
-            <button
-              key={color}
-              type="button"
-              className="swatch"
-              style={{ background: color }}
-              aria-label={`Farbe ${color} entfernen`}
-              title="Tippen zum Entfernen"
-              onClick={() => removeColor(color)}
-            >
-              ×
-            </button>
-          ))}
-          {kit.colors.length < MAX_BRAND_COLORS && (
-            <label className="swatch swatch-add" title="Farbe hinzufügen">
-              +
-              <input
-                type="color"
-                onChange={(e) => addColor(e.target.value)}
-                aria-label="Farbe hinzufügen"
-              />
-            </label>
-          )}
-        </div>
         <p className="field-hint">
-          Tippe auf eine Farbe, um sie zu entfernen. Deine Farben erscheinen
-          beim Anpassen als eigene Farbwelt.
+          Du kannst eine, zwei oder alle drei Farben festlegen. Was du frei
+          lässt, wählen wir passend dazu aus – lesbar bleibt es immer.
+        </p>
+        {COLOR_SLOTS.map((slot) => {
+          const value = kit.colors[slot.key];
+          return (
+            <div className="color-slot" key={slot.key}>
+              <label className="swatch" style={{ background: value ?? "#fff" }}>
+                {!value && <span aria-hidden="true">+</span>}
+                <input
+                  type="color"
+                  value={value ?? "#ffffff"}
+                  onChange={(e) => setColor(slot.key, e.target.value)}
+                  aria-label={`${slot.label} wählen`}
+                />
+              </label>
+              <div className="color-slot-text">
+                <strong>{slot.label}</strong>
+                <span className="field-hint">{slot.hint}</span>
+              </div>
+              {value && (
+                <button
+                  type="button"
+                  className="button-link"
+                  onClick={() => setColor(slot.key, undefined)}
+                >
+                  Zurück&shy;setzen
+                </button>
+              )}
+            </div>
+          );
+        })}
+        <BrandPreview colors={kit.colors} />
+        <p className="field-hint">
+          Deine Farben erscheinen beim Anpassen als Farbwelt „Deine Farben“.
         </p>
 
         <button type="button" className="button-primary" onClick={onClose}>

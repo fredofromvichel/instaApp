@@ -6,7 +6,12 @@
  * will land. Everything is optional — empty fields simply collapse.
  */
 import { useId } from "react";
-import { CONTENT_LABELS, type ContentSlotId } from "../engine/types";
+import {
+  CONTENT_LABELS,
+  CONTENT_TEXT_LIMIT,
+  CONTENT_TITLE_LIMIT,
+  type ContentSlotId,
+} from "../engine/types";
 import { useWizard } from "../state/wizard";
 
 interface FieldSpec {
@@ -20,25 +25,25 @@ const FIELDS: Record<ContentSlotId, FieldSpec> = {
   title1: {
     hint: "Die große Überschrift.",
     placeholder: "z. B. Frisch gebackenes Sauerteigbrot",
-    maxChars: 90,
+    maxChars: CONTENT_TITLE_LIMIT,
     multiline: false,
   },
   text1: {
     hint: "Dein Fließtext dazu.",
     placeholder: "z. B. Jeden Samstag ab 8 Uhr im Hofladen.",
-    maxChars: 420,
+    maxChars: CONTENT_TEXT_LIMIT,
     multiline: true,
   },
   title2: {
     hint: "Kurze zweite Zeile – z. B. Preis, Datum oder Name.",
     placeholder: "z. B. 4,50 €",
-    maxChars: 70,
+    maxChars: CONTENT_TITLE_LIMIT,
     multiline: false,
   },
   text2: {
     hint: "Noch ein Text, wenn du mehr zu sagen hast.",
     placeholder: "z. B. Bestellungen gern vorab per Nachricht",
-    maxChars: 420,
+    maxChars: CONTENT_TEXT_LIMIT,
     multiline: true,
   },
 };

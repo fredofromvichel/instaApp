@@ -92,9 +92,9 @@ const panorama: Template = {
       example: "Waldemar",
       guardrails: TEXT_RAILS,
       frames: {
-        square: { x: 64, y: 800, w: 860, h: 168 },
-        portrait: { x: 64, y: 1060, w: 860, h: 180 },
-        story: { x: 64, y: 1600, w: 860, h: 198 },
+        square: { x: 64, y: 780, w: 860, h: 150 },
+        portrait: { x: 64, y: 1030, w: 860, h: 170 },
+        story: { x: 64, y: 1560, w: 860, h: 190 },
       },
     },
     {
@@ -106,21 +106,21 @@ const panorama: Template = {
       font: {
         family: SANS,
         weight: 500,
-        minSize: 26,
+        minSize: 12,
         maxSize: 34,
-        lineHeight: 1.25,
+        lineHeight: 1.3,
       },
       color: "textOnAccent",
       align: "left",
       vAlign: "top",
-      maxLines: 1,
-      maxChars: 45,
+      multiline: true,
+      maxLines: 12,
       example: "Der längste Dackel der Stadt",
       guardrails: TEXT_RAILS,
       frames: {
-        square: { x: 64, y: 976, w: 860, h: 44 },
-        portrait: { x: 64, y: 1248, w: 860, h: 44 },
-        story: { x: 64, y: 1806, w: 860, h: 48 },
+        square: { x: 64, y: 940, w: 860, h: 106 },
+        portrait: { x: 64, y: 1210, w: 860, h: 120 },
+        story: { x: 64, y: 1760, w: 860, h: 140 },
       },
     },
     {
@@ -192,15 +192,14 @@ const panorama: Template = {
       font: {
         family: SANS,
         weight: 500,
-        minSize: 30,
+        minSize: 14,
         maxSize: 44,
         lineHeight: 1.3,
       },
       color: "textOnAccent",
       align: "left",
       vAlign: "top",
-      maxLines: 4,
-      maxChars: 160,
+      maxLines: 14,
       example:
         "Waldemar sucht ein Zuhause mit ganz viel Platz zum Strecken – am liebsten mit Garten.",
       guardrails: TEXT_RAILS,
@@ -247,14 +246,33 @@ const doppelpost: Template = {
   palettes: PALETTES,
   variants: [
     { id: "weich", name: "Abgerundet", overrides: {} },
-    { id: "kantig", name: "Kantig", overrides: { card: { cornerRadius: 0 } } },
+    {
+      id: "kantig",
+      name: "Kantig",
+      overrides: { card: { cornerRadius: 0 }, frame2: { cornerRadius: 0 } },
+    },
   ],
   slots: [
     {
       id: "bg",
       type: "background",
-      fill: { type: "solid", role: "accent" },
+      fill: { type: "solid", role: "background" },
       frames: WIDE_FRAMES,
+    },
+    {
+      // Accent border around page 2's card — the color highlight of this
+      // template, drawn as a shape so the background role stays the
+      // background (see ColorRole in engine/types.ts).
+      id: "frame2",
+      type: "shape",
+      shape: "rect",
+      fill: { type: "solid", role: "accent" },
+      cornerRadius: 64,
+      frames: onPage2({
+        square: { x: 32, y: 32, w: 1016, h: 1016 },
+        portrait: { x: 32, y: 32, w: 1016, h: 1286 },
+        story: { x: 32, y: 64, w: 1016, h: 1792 },
+      }),
     },
     {
       id: "photo",
@@ -311,15 +329,15 @@ const doppelpost: Template = {
       font: {
         family: SANS,
         weight: 500,
-        minSize: 24,
+        minSize: 13,
         maxSize: 34,
         lineHeight: 1.3,
       },
       color: "background",
       align: "left",
       vAlign: "top",
-      maxLines: 2,
-      maxChars: 80,
+      multiline: true,
+      maxLines: 12,
       example: "Samstag, 12. Juli · ab 14 Uhr",
       guardrails: TEXT_RAILS,
       frames: {
@@ -408,15 +426,14 @@ const doppelpost: Template = {
       font: {
         family: SANS,
         weight: 400,
-        minSize: 26,
+        minSize: 14,
         maxSize: 38,
         lineHeight: 1.45,
       },
       color: "muted",
       align: "left",
       vAlign: "top",
-      maxLines: 8,
-      maxChars: 420,
+      maxLines: 18,
       example:
         "Kuchen, Kaffee und ganz viel Zeit zum Schnacken. Für die Kinder gibt es eine Hüpfburg, und um 16 Uhr spielt die Kapelle aus dem Nachbarort.",
       guardrails: TEXT_RAILS,

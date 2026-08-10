@@ -39,6 +39,11 @@ entscheiden zu müssen. Das kommt gleich danach.
 
   Du musst **nichts** davon ausfüllen. Was leer bleibt, wird einfach nicht
   angezeigt – die Vorlage rutscht dann sauber zusammen.
+
+  Die beiden Beschreibungstexte fassen jeweils **600 Zeichen**, die
+  Überschriften 90. Und was du eingeben kannst, wird auch **vollständig
+  angezeigt** – in jeder Vorlage und in jedem Format. Bei sehr langem Text
+  wird die Schrift dafür entsprechend klein.
 - **Merksatz für Vorlagen mit 2 Bildern:** Alles mit einer **„2“** landet auf
   dem **zweiten** Bild.
 - **QR-Code (optional):** Füge einen Link ein (z. B. zur Vermittlungsseite
@@ -116,8 +121,17 @@ gespeichertes Bild aus. Fertig! 🎉
   letzten Arbeiten und kannst jederzeit weitermachen. Mit dem **⧉-Knopf**
   öffnest du einen Entwurf als Kopie – ideal für Posts, die jede Woche
   ähnlich aussehen.
-- **Mein Stil:** Unter **„🎨 Mein Stil“** (auf dem Startbildschirm) kannst du
-  einmalig dein Logo und deine Lieblingsfarben hinterlegen. Dein Logo wird
-  dann automatisch angeboten, deine Farben erscheinen beim Anpassen.
+- **Mein Stil:** Unter **„🎨 Mein Stil“** (auf dem Startbildschirm) hinterlegst
+  du einmalig dein Logo und deine eigenen Farben. Bei den Farben gibt es drei
+  Plätze, und jeder hat eine feste Aufgabe:
+
+  1. **Hintergrund** – die große Fläche hinter allem
+  2. **Flächen & Akzente** – Preis-Schilder, Rahmen, kleine Hervorhebungen
+  3. **Schrift** – deine Textfarbe
+
+  Du musst nicht alle drei angeben: Schon eine Farbe reicht, den Rest wählen
+  wir passend dazu. Direkt darunter siehst du eine kleine Vorschau, wie das
+  Ergebnis aussieht. Beim Anpassen erscheinen deine Farben dann als Farbwelt
+  **„Deine Farben“** – und sie wirken in jeder Vorlage gleich.
 - **Privatsphäre:** Alles bleibt nur auf deinem Handy. Nichts wird
   hochgeladen, du brauchst kein Konto.

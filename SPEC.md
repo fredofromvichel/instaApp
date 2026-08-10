@@ -84,8 +84,14 @@ within a per-slot range. Undo, per-element reset and whole-design reset are
 always one tap away.
 
 **Colors:** one curated palette set shared by all templates (so the choice
-survives a template switch), plus colors from the user's brand kit. No free
-color picker.
+survives a template switch), plus the user's own palette from the brand kit
+(§6). No free per-element color picker.
+
+**The role contract makes palettes comparable.** Every template must paint its
+largest area with the `background` role, cards with `surface` and highlights
+with `accent` (see `ColorRole` in `src/engine/types.ts`). Break it in one
+template and that template appears to ignore palettes the others obey — which
+is exactly how it read to the user before this was fixed.
 
 ## 5. Templates
 
@@ -125,8 +131,23 @@ the content (it travels with the field across template switches) and is applied
 to the example text too, so the effect is visible before anything is typed.
 
 ### Brand kit ("Mein Stil")
-Logo upload (transparency supported) + favorite colors. Stored on-device.
-Logo auto-offered for logo slots; saved colors appear as extra palettes.
+Logo upload (transparency supported) + the user's own colors. Stored
+on-device; the logo is auto-offered for logo slots.
+
+**Own colors are positional, not a loose list** — one, two or three colors,
+each with a fixed job:
+
+1. **Hintergrund** → `background`
+2. **Flächen & Akzente** → `accent`
+3. **Schrift** → `text`
+
+Everything else (`surface`, `muted`, `textOnAccent`) is derived so the result
+is complete and readable from a single color: cards are lifted off the
+background, secondary text is the main text softened towards the background,
+and text on the accent flips black/white by luminance. A deliberately
+low-contrast choice is respected — it is the user's design decision — but a
+*missing* color is never guessed badly. Together the three produce one extra
+palette, "Deine Farben", which behaves exactly like a shipped one.
 
 ### Drafts ("Entwürfe")
 Autosave of the full working state (template, inputs, photo, adjustments) in
@@ -175,6 +196,11 @@ a photo continuing across the swipe ("Panorama") and a text-only second page
 - Templates must look **Instagram-worthy**: real typographic hierarchy,
   generous whitespace, no clip-art aesthetics.
 - Long or short real-world text never breaks a layout (auto-fit + limits).
+- **Anything that fits the input box is shown in full.** The description
+  fields cap at `CONTENT_TEXT_LIMIT` characters and every template must be able
+  to display that many in every format without truncating — enforced by
+  `capacity.test.ts`, because silent truncation is invisible while authoring
+  and only shows up in the exported PNG.
 - Exported QR codes must scan reliably from a phone screen.
 - The whole flow must be completable one-handed on a phone by a first-time
   user without instructions.
@@ -192,8 +218,18 @@ a photo continuing across the swipe ("Panorama") and a text-only second page
   "·" (one input field), not individual chip elements.
 - **Onboarding:** one friendly sheet with three steps instead of multiple
   screens — fewer taps, same message.
-- **Brand palettes:** a saved brand color becomes the template's default
-  palette with accent + contrast-safe text-on-accent swapped in.
+- **Brand palettes:** the user's own colors are positional (§6) and produce a
+  single derived palette. The first model — a list of colors that each became
+  an accent-only palette — was the wrong shape: it made "my colors" barely
+  visible and left the impression that palettes behave differently per
+  template. Old kits are migrated by treating the first saved color as the
+  accent.
+- **Color-role consistency:** two templates broke the role contract (§4) and
+  therefore reacted to palettes quite differently from the other six —
+  "Galerie" painted its page with `surface` (so palettes barely showed) and
+  "Doppel-Post" with `accent` (so they showed twice as much). Both now paint
+  `background` and carry their look in a `surface` mat / an `accent` frame
+  shape instead. `frames.test.ts` guards the rule.
 - **Size buttons:** the Anpassen step offers "− Kleiner / + Größer" buttons
   for the selected element as an easier alternative to two-finger pinch; both
   paths go through the same `clampAdjustment` guardrails. Text size scales the
@@ -253,6 +289,13 @@ a photo continuing across the swipe ("Panorama") and a text-only second page
   switches and through drafts. A value may hold formatting while its text is
   empty — the renderer treats that as "not filled in" and falls back to the
   example, so styling an empty field never blanks the design.
+- **Input limits and slot capacity are one number:** `CONTENT_TEXT_LIMIT`
+  (600) caps the two description fields *and* is what every `text1`/`text2`
+  slot must be able to render. Making that true meant giving the "second line"
+  slots real paragraph blocks and letting auto-fit shrink far further than
+  before (`minSize` around 12–14 instead of 20–26). Very long text therefore
+  gets small rather than cut off — the user's call, as it should be. Raising
+  the limit means re-running the capacity test, never just widening the input.
 - **Photo box is placeable:** the photo slot itself declares `PHOTO_RAILS`, so
   the frame can be moved/resized like any other element. Its *content* is a
   separate concern: "Anpassen" offers a "Rahmen bewegen / Bildausschnitt"
