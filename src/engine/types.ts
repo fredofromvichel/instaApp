@@ -94,6 +94,12 @@ export interface Frame {
 export interface Guardrails {
   /** May the user move this slot at all? Decoration stays put. */
   movable: boolean;
+  /**
+   * May the user change the box's width/height independently? Text and photo
+   * boxes reflow their content, so free proportions make sense; QR codes and
+   * logos keep their aspect ratio and only scale.
+   */
+  resizable?: boolean;
   minScale: number;
   maxScale: number;
 }
@@ -110,6 +116,12 @@ export interface SlotAdjustment {
   dx: number;
   dy: number;
   scale: number;
+  /**
+   * Free box resize (canvas pixels added to width/height after scaling).
+   * Optional so drafts from before box resizing keep loading; absent = 0.
+   */
+  dw?: number;
+  dh?: number;
 }
 
 export const IDENTITY_ADJUSTMENT: SlotAdjustment = { dx: 0, dy: 0, scale: 1 };
@@ -249,15 +261,19 @@ export const CONTENT_SLOT_IDS = ["title1", "text1", "title2", "text2"] as const;
 export type ContentSlotId = (typeof CONTENT_SLOT_IDS)[number];
 
 /**
- * How long a description (`text1`/`text2`) may get. This is one number on
- * purpose: it caps the input field *and* is the amount every template must be
+ * How long any text field may get. This is one number on purpose: it caps the
+ * input fields *and* is the amount every template's description slots must be
  * able to display without truncating (capacity.test.ts). Raising it means
  * re-checking that test, never just widening the input.
  */
-export const CONTENT_TEXT_LIMIT = 600;
+export const CONTENT_TEXT_LIMIT = 800;
 
-/** How long a heading (`title1`/`title2`) may get. */
-export const CONTENT_TITLE_LIMIT = 90;
+/**
+ * Headings accept the same length (the user's call, not ours); unlike the
+ * descriptions they have no no-truncation guarantee — a 800-character string
+ * in a price chip ellipsizes until the user resizes the box.
+ */
+export const CONTENT_TITLE_LIMIT = CONTENT_TEXT_LIMIT;
 
 export const CONTENT_LABELS: Record<ContentSlotId, string> = {
   title1: "Überschrift 1",
@@ -358,13 +374,30 @@ export type FontChoice =
   | "kraeftig"
   | "handschrift";
 
+/**
+ * Formatting for one range of characters ([start, end)) — the RTF-lite layer.
+ * Later spans win where they overlap. `color` is either a `ColorRole` name
+ * (follows the palette) or a concrete `#rrggbb` the user picked; `size` is a
+ * factor on the field's font size.
+ */
+export interface TextSpan {
+  start: number;
+  end: number;
+  bold?: boolean;
+  italic?: boolean;
+  color?: string;
+  size?: number;
+}
+
 export interface TextValue {
   type: "text";
   text: string;
-  /** Per-field formatting; absent = the template's own styling. */
+  /** Whole-field formatting; absent = the template's own styling. */
   bold?: boolean;
   italic?: boolean;
   font?: FontChoice;
+  /** Range formatting on top of the field styling. */
+  spans?: TextSpan[];
 }
 
 export type SlotValue = PhotoValue | ImageValue | TextValue;

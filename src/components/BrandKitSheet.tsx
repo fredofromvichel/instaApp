@@ -151,13 +151,18 @@ export function BrandKitSheet({ onClose }: { onClose: () => void }) {
         </p>
         {COLOR_SLOTS.map((slot) => {
           const value = kit.colors[slot.key];
+          // The picker must never open on black-by-default (Android showed
+          // exactly that): unset slots open on the base palette's color for
+          // this role, set slots on the last picked color.
+          const pickerDefault =
+            value ?? PALETTES[0]?.colors[slot.key] ?? "#c4633c";
           return (
             <div className="color-slot" key={slot.key}>
               <label className="swatch" style={{ background: value ?? "#fff" }}>
                 {!value && <span aria-hidden="true">+</span>}
                 <input
                   type="color"
-                  value={value ?? "#ffffff"}
+                  value={pickerDefault}
                   onChange={(e) => setColor(slot.key, e.target.value)}
                   aria-label={`${slot.label} wählen`}
                 />

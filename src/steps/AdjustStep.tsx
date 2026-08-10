@@ -15,16 +15,19 @@ import { PostPreview } from "../components/PostPreview";
 import { TextField } from "../components/TextField";
 import { FONT_OPTIONS } from "../engine/fonts";
 import { clampAdjustment } from "../engine/geometry";
-import { canvasBounds, effectiveFrame } from "../engine/render";
+import { canvasBounds, effectiveFrame, resolvePalette } from "../engine/render";
 import type {
   FontChoice,
+  Palette,
   PhotoValue,
   SlotAdjustment,
   Template,
   TextSlot,
+  TextSpan,
   TextValue,
 } from "../engine/types";
 import {
+  CONTENT_TEXT_LIMIT,
   IDENTITY_ADJUSTMENT,
   isContentSlot,
   LOCKED,
@@ -34,6 +37,7 @@ import { panCrop, zoomCrop } from "../lib/cropGestures";
 import { getFormat } from "../lib/formats";
 import { findAdjustableSlotAt } from "../lib/hitTest";
 import { brandPalettesFor, buildRenderInput } from "../lib/renderInput";
+import { applySpan, effectiveStyleAt, remapSpans } from "../lib/textSpans";
 import { useBrand } from "../state/brand";
 import { useWizard } from "../state/wizard";
 import { getTemplate } from "../templates/catalog";
@@ -108,43 +112,197 @@ function PaletteChips({ template }: { template: Template }) {
   );
 }
 
-/** Bold / italic / font for the selected text field. */
-function TextStyleControls({ slot }: { slot: TextSlot }) {
+/** Size-factor bounds for a formatted range. */
+const SPAN_SIZE_MIN = 0.4;
+const SPAN_SIZE_MAX = 3;
+
+/**
+ * The RTF-lite editor for the selected text (SPEC.md §6): edit the text in
+ * place, select a range, then make just that range bold/italic, bigger/
+ * smaller, or a different color. Without a selection, bold/italic switch the
+ * whole field (so the example text previews the style too), and size/color
+ * apply to the whole text.
+ */
+function TextEditor({ slot, palette }: { slot: TextSlot; palette: Palette }) {
   const { state, dispatch } = useWizard();
+  const areaRef = useRef<HTMLTextAreaElement>(null);
+  const [sel, setSel] = useState<{ start: number; end: number }>({
+    start: 0,
+    end: 0,
+  });
   const value = state.values[slot.id];
   const current: TextValue =
     value?.type === "text" ? value : { type: "text", text: "" };
+  const text = current.text;
+  const hasSelection = sel.start < sel.end;
+  const hasText = text.trim() !== "";
 
-  function update(patch: Partial<TextValue>) {
-    // A styled-but-empty field would render nothing; keep the example text
-    // visible by storing the style on the (still empty) value.
-    dispatch({
-      type: "setValue",
-      slotId: slot.id,
-      value: { ...current, ...patch, type: "text" },
-    });
+  function commit(next: TextValue) {
+    dispatch({ type: "setValue", slotId: slot.id, value: next });
   }
 
+  function syncSelection() {
+    const el = areaRef.current;
+    if (!el) return;
+    setSel({ start: el.selectionStart ?? 0, end: el.selectionEnd ?? 0 });
+  }
+
+  /** The range a formatting tap applies to. */
+  function targetRange(): [number, number] {
+    return hasSelection ? [sel.start, sel.end] : [0, text.length];
+  }
+
+  /** Style at the caret/selection start — the toggles flip against this. */
+  const styleAtCaret = effectiveStyleAt(
+    current,
+    Math.min(sel.start, Math.max(0, text.length - 1)),
+  );
+
+  function format(patch: Omit<TextSpan, "start" | "end">) {
+    const [start, end] = targetRange();
+    commit({ ...current, spans: applySpan(current.spans, start, end, patch) });
+  }
+
+  function toggle(key: "bold" | "italic") {
+    if (!hasSelection || !hasText) {
+      // Whole-field toggle: also styles the example text of an empty field.
+      commit({ ...current, [key]: current[key] !== true });
+      return;
+    }
+    format({ [key]: !styleAtCaret[key] });
+  }
+
+  function stepSpanSize(factor: number) {
+    const size = Math.min(
+      SPAN_SIZE_MAX,
+      Math.max(SPAN_SIZE_MIN, styleAtCaret.size * factor),
+    );
+    format({ size });
+  }
+
+  /** Resolved hex the color picker opens with — never black-by-default. */
+  const currentHex = (() => {
+    const c = styleAtCaret.color;
+    if (c?.startsWith("#")) return c;
+    const roleColor = c
+      ? palette.colors[c as keyof Palette["colors"]]
+      : undefined;
+    return roleColor ?? palette.colors[slot.color];
+  })();
+
+  /** Keep the textarea's selection alive across toolbar taps. */
+  const keepSelection = (e: React.PointerEvent) => e.preventDefault();
   const activeFont: FontChoice = current.font ?? "vorlage";
+  const rangeHint = hasSelection
+    ? "Wirkt auf den markierten Text."
+    : "Markiere Text, um nur einen Teil zu ändern – sonst gilt es für alles.";
+
   return (
     <>
+      <h2 className="form-section-title">Text bearbeiten</h2>
+      <div className="field">
+        <textarea
+          ref={areaRef}
+          rows={3}
+          value={text}
+          maxLength={CONTENT_TEXT_LIMIT}
+          placeholder={slot.example}
+          onChange={(e) => {
+            const nextText = e.target.value;
+            commit({
+              ...current,
+              text: nextText,
+              spans: remapSpans(current.spans, text, nextText),
+            });
+          }}
+          onSelect={syncSelection}
+          onKeyUp={syncSelection}
+          onBlur={syncSelection}
+        />
+        <p className="field-hint">{rangeHint}</p>
+      </div>
       <div className="button-row">
         <button
           type="button"
-          className={`button-secondary ${current.bold ? "is-active" : ""}`}
-          aria-pressed={current.bold === true}
-          onClick={() => update({ bold: !current.bold })}
+          className={`button-secondary ${styleAtCaret.bold ? "is-active" : ""}`}
+          aria-pressed={styleAtCaret.bold}
+          onPointerDown={keepSelection}
+          onClick={() => toggle("bold")}
         >
           <b>Fett</b>
         </button>
         <button
           type="button"
-          className={`button-secondary ${current.italic ? "is-active" : ""}`}
-          aria-pressed={current.italic === true}
-          onClick={() => update({ italic: !current.italic })}
+          className={`button-secondary ${styleAtCaret.italic ? "is-active" : ""}`}
+          aria-pressed={styleAtCaret.italic}
+          onPointerDown={keepSelection}
+          onClick={() => toggle("italic")}
         >
           <i>Kursiv</i>
         </button>
+        <button
+          type="button"
+          className="button-secondary"
+          disabled={!hasText}
+          onPointerDown={keepSelection}
+          onClick={() => stepSpanSize(1 / 1.2)}
+          aria-label="Schrift kleiner"
+        >
+          A−
+        </button>
+        <button
+          type="button"
+          className="button-secondary"
+          disabled={!hasText}
+          onPointerDown={keepSelection}
+          onClick={() => stepSpanSize(1.2)}
+          aria-label="Schrift größer"
+        >
+          A+
+        </button>
+      </div>
+      <div className="chip-row">
+        <button
+          type="button"
+          className="chip"
+          disabled={!hasText}
+          onPointerDown={keepSelection}
+          onClick={() => format({ color: "" })}
+        >
+          Farbe wie Vorlage
+        </button>
+        {(["text", "accent", "muted", "textOnAccent"] as const).map((role) => (
+          <button
+            key={role}
+            type="button"
+            className="chip color-chip"
+            disabled={!hasText}
+            aria-label={`Textfarbe ${role}`}
+            onPointerDown={keepSelection}
+            onClick={() => format({ color: role })}
+          >
+            <span
+              className="palette-dot"
+              style={{ background: palette.colors[role] }}
+            />
+          </button>
+        ))}
+        <label
+          className="chip color-chip"
+          aria-label="Eigene Textfarbe wählen"
+          onPointerDown={keepSelection}
+        >
+          <span
+            className="palette-dot color-wheel"
+            style={{ background: currentHex }}
+          />
+          <input
+            type="color"
+            value={currentHex}
+            disabled={!hasText}
+            onChange={(e) => format({ color: e.target.value })}
+          />
+        </label>
       </div>
       <div className="chip-row">
         {FONT_OPTIONS.map((option) => (
@@ -153,7 +311,7 @@ function TextStyleControls({ slot }: { slot: TextSlot }) {
             type="button"
             className={`chip ${option.id === activeFont ? "selected" : ""}`}
             style={option.family ? { fontFamily: option.family } : undefined}
-            onClick={() => update({ font: option.id })}
+            onClick={() => commit({ ...current, font: option.id })}
           >
             {option.name}
           </button>
@@ -177,6 +335,14 @@ export function AdjustStep() {
   });
   const history = useRef<Record<string, SlotAdjustment>[]>([]);
   const [historySize, setHistorySize] = useState(0);
+  /** Active edge-handle drag: which axes it resizes and where it started. */
+  const resizing = useRef<{
+    axis: "x" | "y" | "xy";
+    startX: number;
+    startY: number;
+    base: SlotAdjustment;
+    scale: number;
+  } | null>(null);
 
   const template = state.templateId ? getTemplate(state.templateId) : undefined;
   if (!template || !state.formatId) {
@@ -198,6 +364,8 @@ export function AdjustStep() {
   const photoValue = state.values.photo;
   const isPhotoSelected = selectedSlot?.type === "photo";
   const cropping = isPhotoSelected && photoMode === "crop";
+
+  const activePalette = resolvePalette(buildRenderInput(state, template, kit));
 
   /** Extra text fields this template adds beyond the four universal ones. */
   const extraFields = template.slots.filter(
@@ -255,6 +423,41 @@ export function AdjustStep() {
         bounds,
       ),
     });
+  }
+
+  /** Drag of one of the selected outline's edge handles (box resize). */
+  function onHandleDown(event: React.PointerEvent, axis: "x" | "y" | "xy") {
+    if (!selectedId) return;
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    const canvas = wrapperRef.current?.querySelector("canvas");
+    const scale =
+      canvas && canvas.clientWidth > 0 ? canvas.width / canvas.clientWidth : 1;
+    gesture.current.historyPushed = false;
+    pushHistory();
+    resizing.current = {
+      axis,
+      startX: event.clientX,
+      startY: event.clientY,
+      base: state.adjustments[selectedId] ?? IDENTITY_ADJUSTMENT,
+      scale,
+    };
+  }
+
+  function onHandleMove(event: React.PointerEvent) {
+    const drag = resizing.current;
+    if (!drag || !selectedId) return;
+    const dx = (event.clientX - drag.startX) * drag.scale;
+    const dy = (event.clientY - drag.startY) * drag.scale;
+    updateAdjustment(selectedId, () => ({
+      ...drag.base,
+      dw: (drag.base.dw ?? 0) + (drag.axis !== "y" ? dx : 0),
+      dh: (drag.base.dh ?? 0) + (drag.axis !== "x" ? dy : 0),
+    }));
+  }
+
+  function onHandleUp() {
+    resizing.current = null;
   }
 
   /** Pan/zoom the photo inside its box (only in "Ausschnitt" mode). */
@@ -411,7 +614,7 @@ export function AdjustStep() {
         {selectedSlot
           ? cropping
             ? "Ziehe am Bild, um den Ausschnitt zu wählen."
-            : "Ziehe das Element an seinen Platz – auch über den Rand hinaus."
+            : "Ziehe das Element an seinen Platz. Mit den runden Griffen änderst du Breite und Höhe."
           : "Tippe auf ein Element mit gestricheltem Rahmen, um es zu bewegen."}
       </p>
       <div
@@ -450,17 +653,45 @@ export function AdjustStep() {
                 // Skip outlines that lie entirely on another slide.
                 const left = frame.x - slide * format.width;
                 if (left + frame.w <= 0 || left >= format.width) return null;
+                const selected = slot.id === selectedId;
+                const withHandles = selected && slot.guardrails?.resizable;
                 return (
                   <span
                     key={slot.id}
-                    className={`slot-outline ${slot.id === selectedId ? "selected" : ""}`}
+                    className={`slot-outline ${selected ? "selected" : ""}`}
                     style={{
                       left: `${(left / format.width) * 100}%`,
                       top: `${(frame.y / format.height) * 100}%`,
                       width: `${(frame.w / format.width) * 100}%`,
                       height: `${(frame.h / format.height) * 100}%`,
                     }}
-                  />
+                  >
+                    {withHandles &&
+                      (
+                        [
+                          ["x", "handle-right"],
+                          ["y", "handle-bottom"],
+                          ["xy", "handle-corner"],
+                        ] as const
+                      ).map(([axis, cls]) => (
+                        <span
+                          key={axis}
+                          className={`slot-handle ${cls}`}
+                          role="slider"
+                          aria-label={
+                            axis === "x"
+                              ? "Breite ändern"
+                              : axis === "y"
+                                ? "Höhe ändern"
+                                : "Größe ändern"
+                          }
+                          onPointerDown={(e) => onHandleDown(e, axis)}
+                          onPointerMove={onHandleMove}
+                          onPointerUp={onHandleUp}
+                          onPointerCancel={onHandleUp}
+                        />
+                      ))}
+                  </span>
                 );
               })}
           </div>
@@ -507,7 +738,13 @@ export function AdjustStep() {
         </div>
       )}
 
-      {selectedText && <TextStyleControls slot={selectedText} />}
+      {selectedText && (
+        <TextEditor
+          key={selectedText.id}
+          slot={selectedText}
+          palette={activePalette}
+        />
+      )}
 
       <div className="button-row">
         <button

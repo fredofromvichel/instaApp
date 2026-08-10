@@ -88,6 +88,9 @@ export function coversFrame(placement: Frame, frame: Frame): boolean {
  */
 export const MIN_ON_CANVAS = 0.35;
 
+/** Smallest box a resizable slot may be dragged to (canvas pixels). */
+export const MIN_BOX = { w: 90, h: 44 };
+
 /**
  * Clamp a user adjustment (SPEC.md §4, "frei, aber mit Netz").
  *
@@ -112,12 +115,29 @@ export function clampAdjustment(
   );
   if (!guardrails.movable) return { dx: 0, dy: 0, scale };
 
-  // Where the scaled frame sits before translation (applyAdjustment scales
-  // about the frame center).
-  const w = frame.w * scale;
-  const h = frame.h * scale;
-  const baseX = frame.x + (frame.w - w) / 2;
-  const baseY = frame.y + (frame.h - h) / 2;
+  // Free box resize: never below MIN_BOX (a box too small to grab is a box
+  // lost), never wider/taller than the canvas itself.
+  const dw = guardrails.resizable
+    ? clamp(
+        adjustment.dw ?? 0,
+        MIN_BOX.w - frame.w * scale,
+        bounds.w - frame.w * scale,
+      )
+    : 0;
+  const dh = guardrails.resizable
+    ? clamp(
+        adjustment.dh ?? 0,
+        MIN_BOX.h - frame.h * scale,
+        bounds.h - frame.h * scale,
+      )
+    : 0;
+
+  // Where the resized frame sits before translation (applyAdjustment scales
+  // about the frame center, then adds dw/dh keeping the top-left).
+  const w = frame.w * scale + dw;
+  const h = frame.h * scale + dh;
+  const baseX = frame.x + (frame.w - frame.w * scale) / 2;
+  const baseY = frame.y + (frame.h - frame.h * scale) / 2;
   const keepX = Math.min(w, bounds.w) * MIN_ON_CANVAS;
   const keepY = Math.min(h, bounds.h) * MIN_ON_CANVAS;
   return {
@@ -132,6 +152,8 @@ export function clampAdjustment(
       bounds.y + bounds.h - keepY - baseY,
     ),
     scale,
+    dw,
+    dh,
   };
 }
 
@@ -144,11 +166,11 @@ export function applyAdjustment(
   frame: Frame,
   adjustment: SlotAdjustment,
 ): Frame {
-  const w = frame.w * adjustment.scale;
-  const h = frame.h * adjustment.scale;
+  const w = frame.w * adjustment.scale + (adjustment.dw ?? 0);
+  const h = frame.h * adjustment.scale + (adjustment.dh ?? 0);
   return {
-    x: frame.x + (frame.w - w) / 2 + adjustment.dx,
-    y: frame.y + (frame.h - h) / 2 + adjustment.dy,
+    x: frame.x + (frame.w - frame.w * adjustment.scale) / 2 + adjustment.dx,
+    y: frame.y + (frame.h - frame.h * adjustment.scale) / 2 + adjustment.dy,
     w,
     h,
   };
