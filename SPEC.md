@@ -196,6 +196,11 @@ a photo continuing across the swipe ("Panorama") and a text-only second page
 - Templates must look **Instagram-worthy**: real typographic hierarchy,
   generous whitespace, no clip-art aesthetics.
 - Long or short real-world text never breaks a layout (auto-fit + limits).
+- **Anything that fits the input box is shown in full.** The description
+  fields cap at `CONTENT_TEXT_LIMIT` characters and every template must be able
+  to display that many in every format without truncating — enforced by
+  `capacity.test.ts`, because silent truncation is invisible while authoring
+  and only shows up in the exported PNG.
 - Exported QR codes must scan reliably from a phone screen.
 - The whole flow must be completable one-handed on a phone by a first-time
   user without instructions.
@@ -284,6 +289,13 @@ a photo continuing across the swipe ("Panorama") and a text-only second page
   switches and through drafts. A value may hold formatting while its text is
   empty — the renderer treats that as "not filled in" and falls back to the
   example, so styling an empty field never blanks the design.
+- **Input limits and slot capacity are one number:** `CONTENT_TEXT_LIMIT`
+  (600) caps the two description fields *and* is what every `text1`/`text2`
+  slot must be able to render. Making that true meant giving the "second line"
+  slots real paragraph blocks and letting auto-fit shrink far further than
+  before (`minSize` around 12–14 instead of 20–26). Very long text therefore
+  gets small rather than cut off — the user's call, as it should be. Raising
+  the limit means re-running the capacity test, never just widening the input.
 - **Photo box is placeable:** the photo slot itself declares `PHOTO_RAILS`, so
   the frame can be moved/resized like any other element. Its *content* is a
   separate concern: "Anpassen" offers a "Rahmen bewegen / Bildausschnitt"

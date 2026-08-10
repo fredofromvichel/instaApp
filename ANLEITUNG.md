@@ -39,6 +39,11 @@ entscheiden zu müssen. Das kommt gleich danach.
 
   Du musst **nichts** davon ausfüllen. Was leer bleibt, wird einfach nicht
   angezeigt – die Vorlage rutscht dann sauber zusammen.
+
+  Die beiden Beschreibungstexte fassen jeweils **600 Zeichen**, die
+  Überschriften 90. Und was du eingeben kannst, wird auch **vollständig
+  angezeigt** – in jeder Vorlage und in jedem Format. Bei sehr langem Text
+  wird die Schrift dafür entsprechend klein.
 - **Merksatz für Vorlagen mit 2 Bildern:** Alles mit einer **„2“** landet auf
   dem **zweiten** Bild.
 - **QR-Code (optional):** Füge einen Link ein (z. B. zur Vermittlungsseite

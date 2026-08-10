@@ -248,6 +248,17 @@ export const CONTENT_SLOT_IDS = ["title1", "text1", "title2", "text2"] as const;
 
 export type ContentSlotId = (typeof CONTENT_SLOT_IDS)[number];
 
+/**
+ * How long a description (`text1`/`text2`) may get. This is one number on
+ * purpose: it caps the input field *and* is the amount every template must be
+ * able to display without truncating (capacity.test.ts). Raising it means
+ * re-checking that test, never just widening the input.
+ */
+export const CONTENT_TEXT_LIMIT = 600;
+
+/** How long a heading (`title1`/`title2`) may get. */
+export const CONTENT_TITLE_LIMIT = 90;
+
 export const CONTENT_LABELS: Record<ContentSlotId, string> = {
   title1: "Überschrift 1",
   text1: "Beschreibungstext 1",
