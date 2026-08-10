@@ -6,6 +6,7 @@
  * "preview looks exactly like the exported PNG" (SPEC.md §7).
  */
 import { getFormat } from "../lib/formats";
+import { FONT_OPTIONS, fontFamilyOf, fontSizeFactor } from "./fonts";
 import {
   applyAdjustment,
   clampAdjustment,
@@ -23,6 +24,8 @@ import type {
   QrSlot,
   RenderInput,
   Slot,
+  SlotAdjustment,
+  SlotValue,
   SlotVariantOverride,
   TextSlot,
 } from "./types";
@@ -58,6 +61,14 @@ export async function ensureFontsLoaded(
   for (const slot of template.slots) {
     if (slot.type === "text") {
       specs.add(`${slot.font.weight} 16px ${slot.font.family}`);
+      specs.add(`italic 900 16px ${slot.font.family}`);
+    }
+  }
+  // The user may switch any field to any of the offered families.
+  for (const option of FONT_OPTIONS) {
+    if (option.family) {
+      specs.add(`400 16px ${option.family}`);
+      specs.add(`900 16px ${option.family}`);
     }
   }
   try {
@@ -127,8 +138,55 @@ function pathRoundRect(
   }
 }
 
-function setFont(ctx: CanvasRenderingContext2D, slot: TextSlot, size: number) {
-  ctx.font = `${slot.font.weight} ${size}px ${slot.font.family}`;
+/** The user's per-field formatting, defaulted to the template's styling. */
+interface TextStyle {
+  bold: boolean;
+  italic: boolean;
+  family: string | null;
+  /** Auto-fit range factor, so a switched family keeps its optical size. */
+  sizeFactor: number;
+}
+
+const PLAIN_STYLE: TextStyle = {
+  bold: false,
+  italic: false,
+  family: null,
+  sizeFactor: 1,
+};
+
+/**
+ * Is a slot actually filled in? Text values can carry formatting without any
+ * text, which does not count as content (companion captions must not appear
+ * for a field the user only styled).
+ */
+function hasContent(values: RenderInput["values"], slotId: string): boolean {
+  const value = values[slotId];
+  if (!value) return false;
+  return value.type !== "text" || value.text.trim() !== "";
+}
+
+function textStyleOf(value: SlotValue | undefined): TextStyle {
+  if (value?.type !== "text") return PLAIN_STYLE;
+  return {
+    bold: value.bold === true,
+    italic: value.italic === true,
+    family: fontFamilyOf(value.font),
+    sizeFactor: fontSizeFactor(value.font),
+  };
+}
+
+function setFont(
+  ctx: CanvasRenderingContext2D,
+  slot: TextSlot,
+  size: number,
+  style: TextStyle,
+) {
+  // Bold always lands visibly above the template's own weight.
+  const weight = style.bold
+    ? Math.min(900, Math.max(700, slot.font.weight + 200))
+    : slot.font.weight;
+  const family = style.family ?? slot.font.family;
+  ctx.font = `${style.italic ? "italic " : ""}${weight} ${size}px ${family}`;
   if ("letterSpacing" in ctx) {
     ctx.letterSpacing = `${slot.font.letterSpacing ?? 0}px`;
   }
@@ -146,23 +204,25 @@ function drawText(
    * template's maxSize.
    */
   fontScale = 1,
+  style: TextStyle = PLAIN_STYLE,
 ) {
   const content = slot.font.uppercase ? text.toUpperCase() : text;
+  const sizeScale = fontScale * style.sizeFactor;
   const { fontSize, lines } = autoFitText(content, {
     maxWidth: frame.w,
     maxHeight: frame.h,
     maxLines: slot.maxLines,
-    minSize: slot.font.minSize * fontScale,
-    maxSize: slot.font.maxSize * fontScale,
+    minSize: slot.font.minSize * sizeScale,
+    maxSize: slot.font.maxSize * sizeScale,
     lineHeight: slot.font.lineHeight,
     measure: (t, size) => {
-      setFont(ctx, slot, size);
+      setFont(ctx, slot, size, style);
       return ctx.measureText(t).width;
     },
   });
   if (lines.length === 0) return;
 
-  setFont(ctx, slot, fontSize);
+  setFont(ctx, slot, fontSize, style);
   const lineHeightPx = fontSize * slot.font.lineHeight;
   const blockHeight = lines.length * lineHeightPx;
   const align = slot.align ?? "left";
@@ -348,17 +408,49 @@ function drawContainedImage(
   ctx.restore();
 }
 
+/**
+ * The canvas an adjustment is clamped against: the full slot space, which for
+ * a carousel template is `slides` images wide.
+ */
+export function canvasBounds(
+  template: RenderInput["template"],
+  formatId: RenderInput["formatId"],
+): Frame {
+  const format = getFormat(formatId);
+  return {
+    x: 0,
+    y: 0,
+    w: format.width * templateSlides(template),
+    h: format.height,
+  };
+}
+
+/** A slot's clamped adjustment for the given format. */
+export function effectiveAdjustment(
+  slot: Slot,
+  template: RenderInput["template"],
+  formatId: RenderInput["formatId"],
+  adjustments: RenderInput["adjustments"],
+): SlotAdjustment {
+  return clampAdjustment(
+    adjustments?.[slot.id] ?? IDENTITY_ADJUSTMENT,
+    slot.guardrails ?? LOCKED,
+    slot.frames[formatId],
+    canvasBounds(template, formatId),
+  );
+}
+
 /** Slot frame for the given format with the user's clamped adjustment applied. */
 export function effectiveFrame(
   slot: Slot,
+  template: RenderInput["template"],
   formatId: RenderInput["formatId"],
   adjustments: RenderInput["adjustments"],
 ): Frame {
-  const adjustment = clampAdjustment(
-    adjustments?.[slot.id] ?? IDENTITY_ADJUSTMENT,
-    slot.guardrails ?? LOCKED,
+  return applyAdjustment(
+    slot.frames[formatId],
+    effectiveAdjustment(slot, template, formatId, adjustments),
   );
-  return applyAdjustment(slot.frames[formatId], adjustment);
 }
 
 /**
@@ -394,7 +486,12 @@ export async function renderPost(
     const override: SlotVariantOverride | undefined =
       variant?.overrides[slot.id];
     if (override?.hidden) continue;
-    const frame = effectiveFrame(slot, input.formatId, input.adjustments);
+    const frame = effectiveFrame(
+      slot,
+      input.template,
+      input.formatId,
+      input.adjustments,
+    );
     switch (slot.type) {
       case "background": {
         const full: Frame = {
@@ -445,25 +542,39 @@ export async function renderPost(
       case "text": {
         if (
           slot.showWith &&
-          input.values[slot.showWith] === undefined &&
+          !hasContent(input.values, slot.showWith) &&
           !input.previewExamples
         ) {
           break;
         }
         const value = input.values[slot.id];
+        // A value may exist while its text is empty — the user picked
+        // formatting for a field she has not typed into (yet). That must
+        // behave exactly like "not filled in", not like an empty design.
+        const typed = value?.type === "text" ? value.text : "";
         const text = slot.fixed
           ? slot.example
-          : value?.type === "text"
-            ? value.text
+          : typed.trim() !== ""
+            ? typed
             : slot.optional && !input.previewExamples
               ? ""
               : slot.example;
         if (text.trim() !== "") {
-          const adjustment = clampAdjustment(
-            input.adjustments?.[slot.id] ?? IDENTITY_ADJUSTMENT,
-            slot.guardrails ?? LOCKED,
+          const adjustment = effectiveAdjustment(
+            slot,
+            input.template,
+            input.formatId,
+            input.adjustments,
           );
-          drawText(ctx, slot, frame, palette, text, adjustment.scale);
+          drawText(
+            ctx,
+            slot,
+            frame,
+            palette,
+            text,
+            adjustment.scale,
+            textStyleOf(value),
+          );
         }
         break;
       }

@@ -20,7 +20,8 @@ Layout, spacing, and typography stay professional because she cannot break them.
 
 ## 2. What it is not
 
-- ❌ Not a free-form design tool (no Canva-style canvas).
+- ❌ Not a design tool that starts from a blank canvas — the user always starts
+  from a finished template (she may then move things freely inside it, §4).
 - ❌ No Instagram API integration — the app never talks to Instagram.
 - ❌ No accounts, no login, no backend, no server-side storage.
 - ❌ No photo collages — exactly one photo slot per template.
@@ -33,61 +34,79 @@ One primary action per screen. Big touch targets (≥ 44 px). Informal German
 
 1. **Format wählen** — visual cards: Quadrat (1080×1080), Hochformat
    (1080×1350), Story (1080×1920).
-2. **Vorlage wählen** — category tabs with template preview thumbnails.
-3. **Inhalte ausfüllen** — photo, texts, optional QR link, optional logo.
-4. **Anpassen** — curated color palettes; light repositioning within guardrails.
+2. **Inhalte ausfüllen** — the photo and the four universal text fields, plus
+   optional QR link and logo. No template is chosen yet.
+3. **Vorlage wählen** — one flat grid of all templates, each previewed **with
+   the content just entered**, so designs are compared against real words.
+4. **Anpassen** — palettes, style variant, text formatting, free placement,
+   photo crop, and any extra fields the chosen template adds.
 5. **Herunterladen** — full-resolution PNG to the phone.
 
-Back/forward navigation never loses state. Work in progress is autosaved
-on-device.
+**Content before template** is the load-bearing decision: the fields are the
+same for every template, so switching templates never loses anything and the
+user can browse all designs to find where her post looks best. Back/forward
+navigation never loses state. Work in progress is autosaved on-device.
 
-## 4. Editor model: template-first with guardrails
+## 4. Editor model: universal content in guarded templates
 
-A template defines **slots**; the user can only fill and lightly adjust them:
+### The four universal fields
+
+Every template maps the same content onto its own design:
+
+| Field | Reading | Slot id |
+|-------|---------|---------|
+| Überschrift 1 | the headline | `title1` |
+| Beschreibungstext 1 | the main paragraph | `text1` |
+| Überschrift 2 | short second heading (price, date, name) | `title2` |
+| Beschreibungstext 2 | the secondary line/paragraph | `text2` |
+
+All four are optional; empty fields collapse. On two-page templates
+**everything numbered "2" belongs to the second image** — the one rule the user
+has to learn. A template may add **extra fields** (text slots whose ids are not
+universal, e.g. the Steckbrief's `dog:age`); they appear in "Anpassen" once
+that template is chosen.
+
+### What the user may do to a slot
 
 | Slot type | User can | User cannot |
 |-----------|----------|-------------|
-| Photo (exactly 1) | pick photo (picker or clipboard), pan/pinch-crop within the slot, shrink it below the slot (gap fills with a blurred copy of the photo) | move/resize the slot freely |
-| Text | edit content; nudge/resize within template-defined limits | choose fonts, break layout, drag off-canvas |
-| QR (optional) | paste a URL; nudge/resize within limits | style it beyond palette-derived colors |
-| Logo (optional) | supply logo from brand kit; nudge/resize within limits | — |
-| Decor/background | switch curated palette | edit shapes |
+| Photo (exactly 1) | pick it (picker or clipboard), place/resize its box, pan/pinch-crop inside it, shrink it below its box (gap fills with a blurred copy) | — |
+| Text | edit content; place/resize freely; bold, italic, one of four fonts | choose arbitrary fonts/colors, lose an element off-canvas |
+| QR (optional) | paste a URL; place/resize (never below 0.7 — scannability) | style it beyond black-on-white |
+| Logo (optional) | supply logo from brand kit; place/resize freely | — |
+| Decor/background | switch curated palette and style variant | move or edit shapes |
 
-**Guardrails** (defined per slot in the template schema): allowed offset range,
-min/max scale, legibility minimums. It must be *impossible* to produce a broken
-or ugly layout by dragging. Per-element and whole-design reset ("Zurücksetzen").
+**Guardrails** are now about *keeping things usable*, not about keeping things
+in place: placement is free (out of the frame, over other elements, hanging
+over the image edge), and the only hard rule is that at least `MIN_ON_CANVAS`
+(35 %) of an element stays on the canvas, so nothing can be lost. Size stays
+within a per-slot range. Undo, per-element reset and whole-design reset are
+always one tap away.
 
-**Colors:** only curated palettes shipped with each template, plus colors from
-the user's brand kit. No free color picker.
+**Colors:** one curated palette set shared by all templates (so the choice
+survives a template switch), plus colors from the user's brand kit. No free
+color picker.
 
-## 5. Template categories
+## 5. Templates
 
-Each template exists in all three formats and ships with German example content
-so previews look finished.
+Eight templates, one flat list, no categories — with this few, a single grid is
+faster to scan than any grouping. Each exists in all three formats and ships
+with German example content so previews look finished.
 
-### a) Produkte & Angebote
-Hero photo, product name, prominent price/offer element, short description,
-optional QR (shop/website), optional logo.
+| Template | Look |
+|----------|------|
+| Klassik | photo on top, text on a white card |
+| Vollbild | full-bleed photo, text on a scrim over it |
+| Galerie | photo in a passe-partout, centered serif title |
+| Notiz | text card for tips, opening hours, notices |
+| Zitat | text only, large — works with no photo at all |
+| Steckbrief | the shelter-dog CV (extra fields: Alter, Rasse, Geschlecht, Charakter) |
+| Panorama (2 Bilder) | one photo continuing across both swipe images |
+| Doppel-Post (2 Bilder) | photo page + a text-only second page |
 
-### b) Zitate, Tipps & Infoposts
-Text-first. Big quote/headline, optional author/sub-line, generated backgrounds
-(gradients/patterns — must look great with zero uploads), optional QR and logo.
-
-### c) Hunde-Steckbriefe (shelter-dog CVs) — signature feature
-Warm, emotional, professional; the dog's photo is the hero.
-Input is a **mix of fixed form fields and free text**:
-
-- Fixed fields: **Name, Alter, Rasse, Geschlecht, Charakter** (short tags).
-- Free text: one story area ("Über mich" / "Ich suche…").
-- Optional QR → adoption page or contact link.
-- No fixed shelter organization: neutral warm default design with an optional
-  logo slot (any logo from the brand kit).
-- Layout must adapt gracefully to missing fields; empty slots collapse.
-
-### d) Team & Hinweise
-Practical everyday posts: introducing a (new) team member (photo hero, name,
-role, short text), opening hours (text-first card, one line per day), and a
-friendly "we're on a break" notice with a date badge.
+The **Hunde-Steckbrief** stays the signature feature: warm and professional,
+photo as hero, `title1` as the name, the fact columns as extra fields, `text1`
+as the "Über mich" story. Layout adapts gracefully to missing fields.
 
 ## 6. Features
 
@@ -96,6 +115,14 @@ Instagram post images have no clickable links — QR codes are the link
 mechanism. Paste a URL → client-side generated QR placed into the template's QR
 slot. High error correction, enforced dark-on-light contrast, quiet zone,
 optional caption. Empty URL = slot hidden, layout adapts.
+
+### Text formatting
+Per text field: **fett**, **kursiv**, and one of four self-hosted families —
+Modern (Outfit), Elegant (Fraunces), Kräftig (Archivo), Handschrift (Caveat) —
+or "Vorlage" to keep whatever the template chose (the default). Four moods, not
+a font list: every one of them works in every template. Formatting is part of
+the content (it travels with the field across template switches) and is applied
+to the example text too, so the effect is visible before anything is typed.
 
 ### Brand kit ("Mein Stil")
 Logo upload (transparency supported) + favorite colors. Stored on-device.
@@ -125,7 +152,9 @@ and background gradients continue seamlessly across the swipe. Preview shows
 all slides side by side; export saves/shares one PNG per slide, numbered in
 swipe order. The guardrail model is unchanged: slots may declare guardrails
 as usual and the Anpassen step maps taps/outlines across the per-slide
-preview canvases; photo pan/zoom works as everywhere.
+preview canvases; photo pan/zoom works as everywhere. Two flavors ship:
+a photo continuing across the swipe ("Panorama") and a text-only second page
+("Doppel-Post") for posts that need room rather than a second picture.
 
 ## 7. Technical constraints
 
@@ -136,7 +165,7 @@ preview canvases; photo pan/zoom works as everywhere.
 - Photos: handle HEIC/large images, EXIF orientation; keep enough resolution
   for 1080-wide export; preview and export must render identically. A photo may
   come from the file picker (gallery/camera) or from the clipboard.
-- Fonts: 1–2 quality open-source fonts, self-hosted.
+- Fonts: four quality open-source variable fonts, self-hosted (§6).
 - PWA: installable to home screen, works offline after first load.
 - Target browsers: iOS Safari and Android Chrome (current versions).
 - `html lang="de"`; all UI strings German, informal "du".
@@ -166,14 +195,15 @@ preview canvases; photo pan/zoom works as everywhere.
 - **Brand palettes:** a saved brand color becomes the template's default
   palette with accent + contrast-safe text-on-accent swapped in.
 - **Size buttons:** the Anpassen step offers "− Kleiner / + Größer" buttons
-  for the selected adjustable element as an easier alternative to two-finger
-  pinch; both paths go through the same `clampAdjustment` guardrails.
-- **Generous guardrail presets:** shared presets (`QR_RAILS`, `LOGO_RAILS`,
-  `TEXT_RAILS`, `BADGE_RAILS` in `src/templates/shared.ts`) make QR codes,
-  logos, badges and the main text slots adjustable in every template — QR up
-  to 1.8× for scannability. Text size adjustments scale the auto-fit font
-  range (and badge padding) with them, so "Größer" genuinely enlarges text
-  instead of stopping at the template's maxSize.
+  for the selected element as an easier alternative to two-finger pinch; both
+  paths go through the same `clampAdjustment` guardrails. Text size scales the
+  auto-fit font range (and badge padding) with the frame, so "Größer" genuinely
+  enlarges text instead of stopping at the template's maxSize.
+- **Guardrail presets** (`TEXT_RAILS`, `QR_RAILS`, `LOGO_RAILS`, `PHOTO_RAILS`
+  in `src/templates/shared.ts`) now only bound *size*; movement is bounded by
+  the canvas alone (§4). `movable: false` (the default, `LOCKED`) marks
+  template decoration — backgrounds, panels, rules — which stays put because it
+  *is* the template.
 - **Schema extension `variants`:** a template may declare curated style
   variants ("Stil" toggle in Anpassen): per-slot decorative overrides
   (cornerRadius, fill, hidden) that never change layout or guardrails. The
@@ -200,8 +230,33 @@ preview canvases; photo pan/zoom works as everywhere.
   to the text fields.
 - **Schema extension `slides`:** carousel templates declare
   `slides: N`; the engine renders slide k by shifting the N×-wide slot space
-  by k·width (see §6 "Carousel templates"). First instance:
-  "Langer Hund (2 Bilder)" in the dog category.
+  by k·width (see §6 "Carousel templates"). `onPage2()` in
+  `src/templates/shared.ts` shifts a frame set onto the second page.
+- **Universal content fields:** the biggest revision of the original model.
+  Content used to be per-template (each template had its own labelled fields),
+  which made 16 templates feel like 16 different forms and made switching
+  templates lossy. Text slots now carry the universal ids `title1`/`text1`/
+  `title2`/`text2` (§4), the form lives *before* the template step, and the
+  template picker previews every design with the real content. Ids that are
+  not universal are template extras and are edited in "Anpassen".
+- **One palette set, no categories:** palettes moved from per-template lists to
+  `src/templates/palettes.ts` so a palette choice survives a template switch;
+  category tabs were dropped when the catalog shrank from 16 to 8 templates.
+- **Free placement instead of nudging:** `clampAdjustment` no longer caps
+  offsets per slot. It takes the slot frame and the canvas and only guarantees
+  `MIN_ON_CANVAS` of the element stays visible. This is a deliberate departure
+  from the original "impossible to break a layout" rule (§4): the user asked
+  for real freedom, and the safety net is now "nothing can be lost" plus undo
+  and reset, not "nothing can be moved".
+- **Text formatting stored with the value:** `TextValue` carries `bold`,
+  `italic` and `font`, so formatting travels with the content across template
+  switches and through drafts. A value may hold formatting while its text is
+  empty — the renderer treats that as "not filled in" and falls back to the
+  example, so styling an empty field never blanks the design.
+- **Photo box is placeable:** the photo slot itself declares `PHOTO_RAILS`, so
+  the frame can be moved/resized like any other element. Its *content* is a
+  separate concern: "Anpassen" offers a "Rahmen bewegen / Bildausschnitt"
+  toggle, where the crop path uses the existing `panCrop`/`zoomCrop`.
 
 ## 10. Task map
 

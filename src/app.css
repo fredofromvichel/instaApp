@@ -324,6 +324,38 @@
   font-size: 1rem;
 }
 
+/* Plain text button for secondary, always-reversible actions. */
+.button-link {
+  align-self: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.9rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Toggled-on state for the bold/italic buttons. */
+.button-secondary.is-active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* The picked photo, before any template decides how it is cropped. */
+.photo-thumb {
+  align-self: center;
+  max-width: 100%;
+  max-height: 34dvh;
+  width: auto;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
 /* ------------------------------------------------------ adjust step */
 
 .palette-chip {

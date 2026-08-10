@@ -1,9 +1,11 @@
 /**
- * Wizard state (task 04): one reducer drives the whole create-a-post flow.
- * Steps: Format → Vorlage → Inhalte → Anpassen → Herunterladen.
- * Later tasks plug into this state: photo/text editing write `values`
- * (tasks 05/06), repositioning writes `adjustments` (task 08), and
- * persistence (task 09) serializes the entire `WizardState`.
+ * Wizard state: one reducer drives the whole create-a-post flow.
+ * Steps: Format → Inhalte → Vorlage → Anpassen → Herunterladen.
+ *
+ * Content comes *before* the template on purpose (SPEC.md §3): the user fills
+ * the four universal fields once and then flips through the designs with her
+ * own words and photo in them. Everything the user owns therefore lives in
+ * `values`, keyed by universal slot ids that all templates share.
  */
 import {
   createContext,
@@ -16,8 +18,8 @@ import type { FormatId, SlotAdjustment, SlotValue } from "../engine/types";
 
 export const STEPS = [
   "format",
-  "template",
   "content",
+  "template",
   "adjust",
   "download",
 ] as const;
@@ -25,8 +27,8 @@ export type StepId = (typeof STEPS)[number];
 
 export const STEP_TITLES: Record<StepId, string> = {
   format: "Format wählen",
-  template: "Vorlage wählen",
   content: "Inhalte ausfüllen",
+  template: "Vorlage wählen",
   adjust: "Anpassen",
   download: "Herunterladen",
 };
@@ -89,13 +91,13 @@ export function wizardReducer(
     case "chooseFormat":
       return { ...state, formatId: action.formatId };
     case "chooseTemplate":
-      // Switching templates invalidates palette/variant + adjustments, but
-      // the photo (slot id "photo" by convention) survives the switch.
+      // All content survives a template switch — that is the whole point of
+      // the universal fields. The palette does too (one shared set). Only the
+      // style variant and the placements are template-specific.
       if (action.templateId === state.templateId) return state;
       return {
         ...state,
         templateId: action.templateId,
-        paletteId: null,
         variantId: null,
         adjustments: {},
       };
@@ -146,7 +148,7 @@ function initState(defaultState: WizardState): WizardState {
       format === "square" || format === "portrait" || format === "story"
         ? format
         : "square",
-    templateId: params.get("template") ?? "produkt-klassik",
+    templateId: params.get("template") ?? "klassik",
   };
 }
 

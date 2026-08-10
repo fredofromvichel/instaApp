@@ -7,6 +7,7 @@ import {
   containFit,
   coversFrame,
   MAX_ZOOM,
+  MIN_ON_CANVAS,
   MIN_ZOOM,
 } from "./geometry";
 import { DEFAULT_CROP, LOCKED } from "./types";
@@ -123,25 +124,58 @@ describe("coversFrame", () => {
 });
 
 describe("clampAdjustment", () => {
-  const guardrails = {
-    maxOffsetX: 40,
-    maxOffsetY: 20,
-    minScale: 0.8,
-    maxScale: 1.25,
-  };
+  const movable = { movable: true, minScale: 0.8, maxScale: 1.25 };
+  // A 200×100 element sitting in the middle of a 1000×1000 canvas.
+  const frame = { x: 400, y: 450, w: 200, h: 100 };
+  const canvas = SQUARE;
 
-  it("clamps offsets and scale to the guardrails", () => {
+  it("clamps the scale to the guardrails", () => {
     expect(
-      clampAdjustment({ dx: 100, dy: -100, scale: 3 }, guardrails),
-    ).toEqual({ dx: 40, dy: -20, scale: 1.25 });
+      clampAdjustment({ dx: 0, dy: 0, scale: 3 }, movable, frame, canvas).scale,
+    ).toBe(1.25);
+    expect(
+      clampAdjustment({ dx: 0, dy: 0, scale: 0.1 }, movable, frame, canvas)
+        .scale,
+    ).toBe(0.8);
+  });
+
+  it("allows free movement out of the element's frame", () => {
+    const moved = clampAdjustment(
+      { dx: 300, dy: -320, scale: 1 },
+      movable,
+      frame,
+      canvas,
+    );
+    expect(moved.dx).toBe(300);
+    expect(moved.dy).toBe(-320);
+  });
+
+  it("keeps a share of the element on canvas at the edges", () => {
+    const far = clampAdjustment(
+      { dx: 9999, dy: 9999, scale: 1 },
+      movable,
+      frame,
+      canvas,
+    );
+    const placed = applyAdjustment(frame, far);
+    // Right/bottom edge: 35% of the element must still be inside.
+    expect(placed.x).toBeCloseTo(1000 - 200 * MIN_ON_CANVAS);
+    expect(placed.y).toBeCloseTo(1000 - 100 * MIN_ON_CANVAS);
+    const near = clampAdjustment(
+      { dx: -9999, dy: -9999, scale: 1 },
+      movable,
+      frame,
+      canvas,
+    );
+    const placedNear = applyAdjustment(frame, near);
+    expect(placedNear.x + placedNear.w).toBeCloseTo(200 * MIN_ON_CANVAS);
+    expect(placedNear.y + placedNear.h).toBeCloseTo(100 * MIN_ON_CANVAS);
   });
 
   it("LOCKED forbids any movement", () => {
-    expect(clampAdjustment({ dx: 5, dy: 5, scale: 1.1 }, LOCKED)).toEqual({
-      dx: 0,
-      dy: 0,
-      scale: 1,
-    });
+    expect(
+      clampAdjustment({ dx: 5, dy: 5, scale: 1.1 }, LOCKED, frame, canvas),
+    ).toEqual({ dx: 0, dy: 0, scale: 1 });
   });
 });
 

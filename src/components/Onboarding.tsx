@@ -26,15 +26,16 @@ export function Onboarding() {
         </p>
         <ol className="onboarding-list">
           <li>
-            <span aria-hidden="true">🎨</span> Wähle Format und Vorlage
+            <span aria-hidden="true">📷</span> Bild und Texte eingeben – alles
+            ist freiwillig
           </li>
           <li>
-            <span aria-hidden="true">📷</span> Füge dein Foto und deine Texte
-            ein
+            <span aria-hidden="true">🎨</span> Vorlage aussuchen: du siehst
+            deine Texte in jedem Design
           </li>
           <li>
-            <span aria-hidden="true">💾</span> Speichern – und bei Instagram
-            posten
+            <span aria-hidden="true">💾</span> Feinschliff, speichern – und bei
+            Instagram posten
           </li>
         </ol>
         <p className="field-hint">

@@ -66,9 +66,13 @@ feed one pure render path:
   (square/portrait/story, 1080-based pixels), palettes referenced by
   semantic color roles, guardrails per slot. Draw order = slot array order.
 - **Values**: user content keyed by slot id (text / photo+crop / qr / logo
-  images). Missing required text falls back to the slot's German `example`.
-- **Adjustments**: the user's light repositioning, always clamped through
-  `clampAdjustment` against the slot's guardrails (default: `LOCKED`).
+  images). Text slots use the four universal ids `title1`/`text1`/`title2`/
+  `text2` (SPEC.md §4) so content survives switching templates; a `TextValue`
+  also carries its own bold/italic/font. Empty or missing text falls back to
+  the slot's German `example`.
+- **Adjustments**: the user's placement, always clamped through
+  `clampAdjustment` — free inside the canvas, guaranteeing only that
+  `MIN_ON_CANVAS` of the element stays visible. Decoration is `LOCKED`.
 
 Rules that must not be broken:
 
@@ -80,5 +84,7 @@ Rules that must not be broken:
   canvas-free and unit-tested; gestures (tasks 05/08) must reuse them.
 - Text can never overflow a frame: `autoFitText` shrinks within the font's
   min/max and truncates with an ellipsis + `overflow` flag at worst.
+- The wizard is **content first, template second** — anything that assumes a
+  template exists while editing content is a bug.
 - Slots never hold concrete colors — only `ColorRole` references into the
   active palette.

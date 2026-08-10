@@ -21,50 +21,77 @@ funktioniert sogar ohne Internet.
 
 Tippe auf eine Form und dann auf **Weiter**.
 
-## Schritt 2: Vorlage wählen
+## Schritt 2: Inhalte ausfüllen ✏️
 
-Oben siehst du drei Gruppen: **Produkte & Angebote**, **Zitate & Tipps** und
-**Hunde-Steckbriefe**. Tippe dich durch und such dir eine Vorlage aus, die
-dir gefällt. Keine Sorge: Farben und Texte änderst du gleich noch.
+Hier schreibst du erst einmal alles auf – **ganz ohne** dich für ein Design
+entscheiden zu müssen. Das kommt gleich danach.
 
-## Schritt 3: Inhalte ausfüllen ✏️
+- **Dein Bild:** Tippe auf **„Bild auswählen“** und nimm ein Foto aus deiner
+  Galerie oder mach direkt eins mit der Kamera. Hast du ein Bild kopiert
+  (z. B. in WhatsApp: lange draufdrücken → **Kopieren**), tippe einfach auf
+  **„📋 Bild aus Zwischenablage“**. Ohne Bild geht es auch – dafür gibt es
+  reine Text-Vorlagen.
+- **Deine vier Textfelder:**
+  - **Überschrift 1** – die große Überschrift
+  - **Beschreibungstext 1** – dein Text dazu
+  - **Überschrift 2** – eine kurze zweite Zeile, z. B. Preis, Datum oder Name
+  - **Beschreibungstext 2** – noch ein Text, wenn du mehr zu sagen hast
 
-- Tippe auf **„Foto auswählen“** und nimm ein Foto aus deiner Galerie oder
-  mach direkt eins mit der Kamera.
-- **Bild aus der Zwischenablage:** Hast du ein Bild kopiert (z. B. in WhatsApp
-  oder im Browser: lange draufdrücken → **Kopieren**), tippe einfach auf
-  **„📋 Bild aus Zwischenablage“**. Dein Handy fragt dann kurz nach, ob das in
-  Ordnung ist – tippe auf **Einfügen**.
-- **Foto zurechtrücken:** Ziehe das Foto mit einem Finger an die richtige
-  Stelle. Mit den Knöpfen **„− Kleiner“** und **„+ Größer“** (oder mit zwei
-  Fingern) änderst du die Größe.
-- **Das ganze Foto zeigen:** Du kannst das Foto auch kleiner machen als seinen
-  Rahmen – praktisch, wenn sonst oben oder an den Seiten etwas abgeschnitten
-  wird. Der Platz, der dabei frei bleibt, wird automatisch weich und
-  verschwommen mit den Farben deines Fotos gefüllt (so wie bei Videos, die
-  nicht ganz ins Bild passen). Verschieben kannst du das Foto dabei bis genau
-  an den Rand.
-- Fülle die Textfelder aus. Der graue Text in den Feldern ist nur ein
-  Beispiel – schreib einfach deinen eigenen Text hinein.
+  Du musst **nichts** davon ausfüllen. Was leer bleibt, wird einfach nicht
+  angezeigt – die Vorlage rutscht dann sauber zusammen.
+- **Merksatz für Vorlagen mit 2 Bildern:** Alles mit einer **„2“** landet auf
+  dem **zweiten** Bild.
 - **QR-Code (optional):** Füge einen Link ein (z. B. zur Vermittlungsseite
   eines Hundes). Wer den Code später mit der Handykamera scannt, landet
   direkt auf deiner Seite.
-- Zu lange Texte? Kein Problem – die Schrift passt sich automatisch an,
-  kaputtmachen kannst du nichts.
+
+## Schritt 3: Vorlage wählen
+
+Jetzt siehst du **alle acht Vorlagen – schon mit deinen eigenen Texten und
+deinem Bild darin**. Tippe dich in Ruhe durch und schau, wo dein Post am
+besten aussieht. Nichts geht dabei verloren: Du kannst beliebig hin und her
+wechseln, deine Inhalte wandern mit.
+
+| Vorlage | Wofür |
+|---------|-------|
+| **Klassik** | Foto oben, Text auf weißer Karte |
+| **Vollbild** | Foto über das ganze Bild, Text darauf |
+| **Galerie** | Foto im Rahmen, ruhige Mitte |
+| **Notiz** | Textkarte für Tipps, Öffnungszeiten, Hinweise |
+| **Zitat** | Nur Text, ganz groß – ohne Foto |
+| **Steckbrief** | Für Hunde: Foto, Name, Alter, Rasse … |
+| **Panorama (2 Bilder)** | Ein Foto läuft über beide Bilder weiter 🐕 |
+| **Doppel-Post (2 Bilder)** | Bild vorn, zweite Seite nur Text |
 
 ## Schritt 4: Anpassen 🎨
 
 - **Farben:** Tippe auf eine der Farbwelten – das ganze Design färbt sich
   passend um. Es gibt auch saisonale Farbwelten wie **Weihnachten** oder
-  **Sommer**.
-- **Stil:** Viele Vorlagen haben zwei Looks (z. B. „Abgerundet“ und
-  „Kantig“) – einfach antippen und vergleichen.
-- **Feinschliff:** Texte, Preise, QR-Code und Logo haben einen gestrichelten
-  Rahmen. Tippe ein Element an und verschiebe es mit dem Finger. Die Größe
-  änderst du mit den Knöpfen **„− Kleiner“** und **„+ Größer“** (oder mit
-  zwei Fingern) – den QR-Code kannst du z. B. deutlich größer machen, damit
-  er leichter zu scannen ist. Mit **„Zurücksetzen“** kommt alles wieder an
-  seinen Platz.
+  **Sommer**. Die Farbe bleibt erhalten, auch wenn du nochmal die Vorlage
+  wechselst.
+- **Stil:** Jede Vorlage hat zwei Looks (z. B. „Abgerundet“ und „Kantig“) –
+  einfach antippen und vergleichen.
+- **Feinschliff – alles frei verschieben:** Tippe ein Element mit
+  gestricheltem Rahmen an (Überschrift, Text, Preis, QR-Code, Logo, Bild).
+  Dann kannst du es mit dem Finger **überall hinziehen** – auch aus seinem
+  Kasten heraus und ein Stück über den Bildrand hinaus. Ganz verschwinden
+  kann nichts: Ein Rest bleibt immer sichtbar, damit du es wieder zu fassen
+  bekommst. Die Größe änderst du mit **„− Kleiner“** und **„+ Größer“** oder
+  mit zwei Fingern.
+- **Schrift:** Ist ein Text ausgewählt, kannst du ihn **fett** oder *kursiv*
+  machen und zwischen vier Schriften wählen: **Modern**, **Elegant**,
+  **Kräftig** und **Handschrift**. „Vorlage“ nimmt wieder die Schrift, die
+  von Haus aus zur Vorlage gehört.
+- **Bild:** Tippst du das Bild an, kannst du oben umschalten:
+  **„Rahmen bewegen“** verschiebt den Bildkasten, **„Bildausschnitt“** wählt
+  aus, welcher Teil des Fotos zu sehen ist. Du darfst das Foto auch kleiner
+  machen als seinen Rahmen – der Rand füllt sich dann automatisch weich und
+  verschwommen mit den Farben deines Fotos (so wie bei Videos, die nicht ganz
+  ins Bild passen).
+- **Zusätzliche Felder:** Bei der Vorlage **Steckbrief** erscheinen hier noch
+  **Alter, Rasse, Geschlecht** und **Charakter**.
+- Verrutscht? **„Rückgängig“**, **„Element zurück“** oder
+  **„Alles wieder an seinen Platz“** – du kannst nichts kaputt machen.
 
 ## Schritt 5: Speichern 💾
 
@@ -78,14 +105,11 @@ gespeichertes Bild aus. Fertig! 🎉
 - **Gleicher Post, anderes Format:** Nach dem Speichern kannst du denselben
   Post mit einem Tipp auch in den anderen Formaten speichern – praktisch,
   wenn du z. B. ein Quadrat für den Beitrag und eine Story brauchst.
-- **Vorlagen mit 2 Bildern:** Bei der Vorlage **„Langer Hund“** entstehen
-  zwei Bilder, die zusammengehören. Wähle beim Posten einfach beide aus –
-  deine Follower wischen dann von vorne nach hinten. 🐕
+- **Vorlagen mit 2 Bildern:** Dabei entstehen zwei Bilder, die zusammen-
+  gehören. Wähle beim Posten einfach beide aus – deine Follower wischen dann
+  von vorne nach hinten.
 
 ## Gut zu wissen
-
-- **Neue Kategorie „Team & Hinweise“:** Vorlagen, um neue Teammitglieder
-  vorzustellen, deine Öffnungszeiten zu posten oder eine Pause anzukündigen.
 
 - **Entwürfe:** Die App speichert automatisch, woran du gerade arbeitest.
   Auf dem Startbildschirm findest du unter **„Deine Entwürfe“** deine
