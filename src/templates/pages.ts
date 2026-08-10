@@ -106,7 +106,7 @@ const panorama: Template = {
       font: {
         family: SANS,
         weight: 500,
-        minSize: 12,
+        minSize: 10,
         maxSize: 34,
         lineHeight: 1.3,
       },
@@ -114,7 +114,7 @@ const panorama: Template = {
       align: "left",
       vAlign: "top",
       multiline: true,
-      maxLines: 12,
+      maxLines: 24,
       example: "Der längste Dackel der Stadt",
       guardrails: TEXT_RAILS,
       frames: {
@@ -192,14 +192,14 @@ const panorama: Template = {
       font: {
         family: SANS,
         weight: 500,
-        minSize: 14,
+        minSize: 10,
         maxSize: 44,
         lineHeight: 1.3,
       },
       color: "textOnAccent",
       align: "left",
       vAlign: "top",
-      maxLines: 14,
+      maxLines: 24,
       example:
         "Waldemar sucht ein Zuhause mit ganz viel Platz zum Strecken – am liebsten mit Garten.",
       guardrails: TEXT_RAILS,
@@ -329,7 +329,7 @@ const doppelpost: Template = {
       font: {
         family: SANS,
         weight: 500,
-        minSize: 13,
+        minSize: 10,
         maxSize: 34,
         lineHeight: 1.3,
       },
@@ -337,7 +337,7 @@ const doppelpost: Template = {
       align: "left",
       vAlign: "top",
       multiline: true,
-      maxLines: 12,
+      maxLines: 24,
       example: "Samstag, 12. Juli · ab 14 Uhr",
       guardrails: TEXT_RAILS,
       frames: {
@@ -426,14 +426,14 @@ const doppelpost: Template = {
       font: {
         family: SANS,
         weight: 400,
-        minSize: 14,
+        minSize: 10,
         maxSize: 38,
         lineHeight: 1.45,
       },
       color: "muted",
       align: "left",
       vAlign: "top",
-      maxLines: 18,
+      maxLines: 24,
       example:
         "Kuchen, Kaffee und ganz viel Zeit zum Schnacken. Für die Kinder gibt es eine Hüpfburg, und um 16 Uhr spielt die Kapelle aus dem Nachbarort.",
       guardrails: TEXT_RAILS,

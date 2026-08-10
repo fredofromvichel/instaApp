@@ -70,11 +70,17 @@ that template is chosen.
 
 | Slot type | User can | User cannot |
 |-----------|----------|-------------|
-| Photo (exactly 1) | pick it (picker or clipboard), place/resize its box, pan/pinch-crop inside it, shrink it below its box (gap fills with a blurred copy) | — |
-| Text | edit content; place/resize freely; bold, italic, one of four fonts | choose arbitrary fonts/colors, lose an element off-canvas |
-| QR (optional) | paste a URL; place/resize (never below 0.7 — scannability) | style it beyond black-on-white |
-| Logo (optional) | supply logo from brand kit; place/resize freely | — |
+| Photo (exactly 1) | pick it (picker or clipboard), place its box and drag its width/height freely, pan/pinch-crop inside it, shrink it below its box (gap fills with a blurred copy) | — |
+| Text | edit content; place freely; drag box width/height (edge handles); format selected ranges: bold, italic, size, color (RTF-lite); one of four fonts per field | lose an element off-canvas |
+| QR (optional) | paste a URL; place/scale (never below 0.7 — scannability) | style it beyond black-on-white |
+| Logo (optional) | supply logo from brand kit; place/scale freely | — |
 | Decor/background | switch curated palette and style variant | move or edit shapes |
+
+**Free box sizing:** text and photo boxes expose edge handles (right, bottom,
+corner) that change width and height independently (`dw`/`dh` on the
+adjustment). Narrow box + "Größer" = genuinely bigger text that wraps inside
+its box instead of poking past the image edge. Boxes never shrink below
+`MIN_BOX` — a box too small to grab is a box lost.
 
 **Guardrails** are now about *keeping things usable*, not about keeping things
 in place: placement is free (out of the frame, over other elements, hanging
@@ -92,6 +98,13 @@ largest area with the `background` role, cards with `surface` and highlights
 with `accent` (see `ColorRole` in `src/engine/types.ts`). Break it in one
 template and that template appears to ignore palettes the others obey — which
 is exactly how it read to the user before this was fixed.
+
+**Palettes must be tellable apart at a glance.** Each of the eight palettes
+tints background *and* surfaces (not just the accent), one is genuinely dark
+(Nachtblau) besides Schwarz & Gold, and the photo placeholder follows the
+palette (muted→accent sweep). An early version used near-white surfaces in 7
+of 8 palettes — switching palettes then looked like a no-op on photo-heavy
+templates, which read as "colors don't work".
 
 ## 5. Templates
 
@@ -122,13 +135,18 @@ mechanism. Paste a URL → client-side generated QR placed into the template's Q
 slot. High error correction, enforced dark-on-light contrast, quiet zone,
 optional caption. Empty URL = slot hidden, layout adapts.
 
-### Text formatting
-Per text field: **fett**, **kursiv**, and one of four self-hosted families —
-Modern (Outfit), Elegant (Fraunces), Kräftig (Archivo), Handschrift (Caveat) —
-or "Vorlage" to keep whatever the template chose (the default). Four moods, not
-a font list: every one of them works in every template. Formatting is part of
-the content (it travels with the field across template switches) and is applied
-to the example text too, so the effect is visible before anything is typed.
+### Text formatting (RTF-lite)
+The Anpassen step opens the selected text in an inline editor: select a range,
+then make just that range **fett**, *kursiv*, larger/smaller (A− / A+), or a
+different color — palette roles (which keep following palette switches) or a
+free color via the picker, which always opens on the current color, never on
+black. Without a selection the toggles style the whole field. Technically the
+formatting is a list of `TextSpan`s on the `TextValue`; the render engine
+wraps, auto-fits and truncates styled runs, and spans travel with the content
+through template switches, drafts and text edits (offsets are remapped on
+every keystroke). Per field there is additionally one of four self-hosted
+families — Modern (Outfit), Elegant (Fraunces), Kräftig (Archivo), Handschrift
+(Caveat) — or "Vorlage" for the template's own font.
 
 ### Brand kit ("Mein Stil")
 Logo upload (transparency supported) + the user's own colors. Stored
@@ -196,11 +214,13 @@ a photo continuing across the swipe ("Panorama") and a text-only second page
 - Templates must look **Instagram-worthy**: real typographic hierarchy,
   generous whitespace, no clip-art aesthetics.
 - Long or short real-world text never breaks a layout (auto-fit + limits).
-- **Anything that fits the input box is shown in full.** The description
-  fields cap at `CONTENT_TEXT_LIMIT` characters and every template must be able
-  to display that many in every format without truncating — enforced by
-  `capacity.test.ts`, because silent truncation is invisible while authoring
-  and only shows up in the exported PNG.
+- **Anything that fits the input box is shown in full.** Every text field caps
+  at `CONTENT_TEXT_LIMIT` (800) characters, and every template must be able to
+  display that many in its description slots in every format without
+  truncating — enforced by `capacity.test.ts`, because silent truncation is
+  invisible while authoring and only shows up in the exported PNG. Headings
+  accept the same length without the guarantee (a price chip ellipsizes until
+  the user resizes its box).
 - Exported QR codes must scan reliably from a phone screen.
 - The whole flow must be completable one-handed on a phone by a first-time
   user without instructions.

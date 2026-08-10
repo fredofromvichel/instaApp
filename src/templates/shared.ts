@@ -14,6 +14,7 @@ export { GROTESK, SANS, SCRIPT, SERIF } from "../engine/fonts";
 /** Text, badges: may shrink to a caption or grow to a poster headline. */
 export const TEXT_RAILS: Guardrails = {
   movable: true,
+  resizable: true,
   minScale: 0.6,
   maxScale: 2.2,
 };
@@ -34,6 +35,7 @@ export const LOGO_RAILS: Guardrails = {
 /** The photo box itself is placeable too; its content pans/zooms separately. */
 export const PHOTO_RAILS: Guardrails = {
   movable: true,
+  resizable: true,
   minScale: 0.5,
   maxScale: 2,
 };

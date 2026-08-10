@@ -40,10 +40,9 @@ entscheiden zu müssen. Das kommt gleich danach.
   Du musst **nichts** davon ausfüllen. Was leer bleibt, wird einfach nicht
   angezeigt – die Vorlage rutscht dann sauber zusammen.
 
-  Die beiden Beschreibungstexte fassen jeweils **600 Zeichen**, die
-  Überschriften 90. Und was du eingeben kannst, wird auch **vollständig
-  angezeigt** – in jeder Vorlage und in jedem Format. Bei sehr langem Text
-  wird die Schrift dafür entsprechend klein.
+  Jedes Textfeld fasst bis zu **800 Zeichen**, und die Beschreibungstexte
+  werden immer **vollständig angezeigt** – in jeder Vorlage und in jedem
+  Format. Bei sehr langem Text wird die Schrift dafür entsprechend klein.
 - **Merksatz für Vorlagen mit 2 Bildern:** Alles mit einer **„2“** landet auf
   dem **zweiten** Bild.
 - **QR-Code (optional):** Füge einen Link ein (z. B. zur Vermittlungsseite
@@ -76,17 +75,24 @@ wechseln, deine Inhalte wandern mit.
   wechselst.
 - **Stil:** Jede Vorlage hat zwei Looks (z. B. „Abgerundet“ und „Kantig“) –
   einfach antippen und vergleichen.
-- **Feinschliff – alles frei verschieben:** Tippe ein Element mit
+- **Feinschliff – alles frei verschieben und ziehen:** Tippe ein Element mit
   gestricheltem Rahmen an (Überschrift, Text, Preis, QR-Code, Logo, Bild).
   Dann kannst du es mit dem Finger **überall hinziehen** – auch aus seinem
   Kasten heraus und ein Stück über den Bildrand hinaus. Ganz verschwinden
-  kann nichts: Ein Rest bleibt immer sichtbar, damit du es wieder zu fassen
-  bekommst. Die Größe änderst du mit **„− Kleiner“** und **„+ Größer“** oder
-  mit zwei Fingern.
-- **Schrift:** Ist ein Text ausgewählt, kannst du ihn **fett** oder *kursiv*
-  machen und zwischen vier Schriften wählen: **Modern**, **Elegant**,
-  **Kräftig** und **Handschrift**. „Vorlage“ nimmt wieder die Schrift, die
-  von Haus aus zur Vorlage gehört.
+  kann nichts: Ein Rest bleibt immer sichtbar. An den **runden Griffen**
+  (rechts, unten, Ecke) ziehst du die Box **schmaler, breiter, höher oder
+  niedriger** – der Text bricht dann passend um. Die Größe insgesamt änderst
+  du mit **„− Kleiner“** und **„+ Größer“** oder mit zwei Fingern. Tipp:
+  Box schmaler ziehen + „Größer“ = richtig große Schrift, die trotzdem im
+  Bild bleibt.
+- **Text bearbeiten & formatieren:** Ist ein Text ausgewählt, erscheint er
+  unter der Vorschau zum Bearbeiten. **Markiere ein Wort oder einen Satz**,
+  dann kannst du genau diesen Teil **fett**, *kursiv*, mit **A− / A+**
+  kleiner oder größer machen oder ihm eine **eigene Farbe** geben – über die
+  Farbpunkte (passend zur Farbwelt) oder frei über das Farbrad. Ohne
+  Markierung gilt es für den ganzen Text. Dazu vier Schriften: **Modern**,
+  **Elegant**, **Kräftig** und **Handschrift** („Vorlage“ = die Schrift der
+  Vorlage).
 - **Bild:** Tippst du das Bild an, kannst du oben umschalten:
   **„Rahmen bewegen“** verschiebt den Bildkasten, **„Bildausschnitt“** wählt
   aus, welcher Teil des Fotos zu sehen ist. Du darfst das Foto auch kleiner

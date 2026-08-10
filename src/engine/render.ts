@@ -14,8 +14,14 @@ import {
   containFit,
   coversFrame,
 } from "./geometry";
-import { autoFitText } from "./text";
+import {
+  autoFitStyled,
+  type RunStyle,
+  type StyledMeasureFn,
+  spansToRuns,
+} from "./text";
 import type {
+  ColorRole,
   Fill,
   Frame,
   Palette,
@@ -28,6 +34,7 @@ import type {
   SlotValue,
   SlotVariantOverride,
   TextSlot,
+  TextSpan,
 } from "./types";
 import {
   activeVariant,
@@ -145,14 +152,31 @@ interface TextStyle {
   family: string | null;
   /** Auto-fit range factor, so a switched family keeps its optical size. */
   sizeFactor: number;
+  /** Range formatting (RTF-lite) on top of the field styling. */
+  spans?: TextSpan[];
 }
 
-const PLAIN_STYLE: TextStyle = {
+const FIELD_PLAIN: TextStyle = {
   bold: false,
   italic: false,
   family: null,
   sizeFactor: 1,
 };
+
+/**
+ * Resolve a run color: palette-role names follow the active palette, concrete
+ * hex values are the user's explicit pick and stay as chosen.
+ */
+function resolveRunColor(
+  color: string | undefined,
+  palette: Palette,
+  fallback: string,
+): string {
+  if (!color) return fallback;
+  if (color.startsWith("#")) return color;
+  const roleColor = palette.colors[color as ColorRole];
+  return roleColor ?? fallback;
+}
 
 /**
  * Is a slot actually filled in? Text values can carry formatting without any
@@ -166,12 +190,13 @@ function hasContent(values: RenderInput["values"], slotId: string): boolean {
 }
 
 function textStyleOf(value: SlotValue | undefined): TextStyle {
-  if (value?.type !== "text") return PLAIN_STYLE;
+  if (value?.type !== "text") return FIELD_PLAIN;
   return {
     bold: value.bold === true,
     italic: value.italic === true,
     family: fontFamilyOf(value.font),
     sizeFactor: fontSizeFactor(value.font),
+    spans: value.spans,
   };
 }
 
@@ -179,14 +204,15 @@ function setFont(
   ctx: CanvasRenderingContext2D,
   slot: TextSlot,
   size: number,
-  style: TextStyle,
+  field: TextStyle,
+  run: RunStyle,
 ) {
   // Bold always lands visibly above the template's own weight.
-  const weight = style.bold
+  const weight = run.bold
     ? Math.min(900, Math.max(700, slot.font.weight + 200))
     : slot.font.weight;
-  const family = style.family ?? slot.font.family;
-  ctx.font = `${style.italic ? "italic " : ""}${weight} ${size}px ${family}`;
+  const family = field.family ?? slot.font.family;
+  ctx.font = `${run.italic ? "italic " : ""}${weight} ${Math.max(1, size * run.size)}px ${family}`;
   if ("letterSpacing" in ctx) {
     ctx.letterSpacing = `${slot.font.letterSpacing ?? 0}px`;
   }
@@ -204,27 +230,34 @@ function drawText(
    * template's maxSize.
    */
   fontScale = 1,
-  style: TextStyle = PLAIN_STYLE,
+  style: TextStyle = FIELD_PLAIN,
 ) {
-  const content = slot.font.uppercase ? text.toUpperCase() : text;
+  // Runs are computed on the raw text (span indices refer to it); uppercase
+  // transforms per run afterwards, so "ß" → "SS" cannot shift the spans.
+  let runs = spansToRuns(text, style.spans, style);
+  if (slot.font.uppercase) {
+    runs = runs.map((run) => ({ ...run, text: run.text.toUpperCase() }));
+  }
   const sizeScale = fontScale * style.sizeFactor;
-  const { fontSize, lines } = autoFitText(content, {
+  const measure: StyledMeasureFn = (t, size, run) => {
+    setFont(ctx, slot, size, style, run);
+    return ctx.measureText(t).width;
+  };
+  const { fontSize, lines } = autoFitStyled(runs, {
     maxWidth: frame.w,
     maxHeight: frame.h,
     maxLines: slot.maxLines,
     minSize: slot.font.minSize * sizeScale,
     maxSize: slot.font.maxSize * sizeScale,
     lineHeight: slot.font.lineHeight,
-    measure: (t, size) => {
-      setFont(ctx, slot, size, style);
-      return ctx.measureText(t).width;
-    },
+    measure,
   });
   if (lines.length === 0) return;
 
-  setFont(ctx, slot, fontSize, style);
-  const lineHeightPx = fontSize * slot.font.lineHeight;
-  const blockHeight = lines.length * lineHeightPx;
+  const lineHeights = lines.map(
+    (line) => fontSize * slot.font.lineHeight * line.maxSize,
+  );
+  const blockHeight = lineHeights.reduce((a, b) => a + b, 0);
   const align = slot.align ?? "left";
   const vAlign = slot.vAlign ?? "top";
 
@@ -244,7 +277,7 @@ function drawText(
   if (slot.badge) {
     const paddingX = slot.badge.paddingX * fontScale;
     const paddingY = slot.badge.paddingY * fontScale;
-    const widest = Math.max(...lines.map((l) => ctx.measureText(l).width));
+    const widest = Math.max(...lines.map((line) => line.width));
     const badgeW = widest + 2 * paddingX;
     const badgeH = blockHeight + 2 * paddingY;
     const badgeX =
@@ -267,11 +300,25 @@ function drawText(
     ctx.restore();
   }
 
-  ctx.fillStyle = palette.colors[slot.color];
-  ctx.textAlign = align;
+  const defaultColor = palette.colors[slot.color];
+  ctx.textAlign = "left";
   ctx.textBaseline = "middle";
+  let y = blockTop;
   lines.forEach((line, i) => {
-    ctx.fillText(line, anchorX, blockTop + (i + 0.5) * lineHeightPx);
+    const lineHeight = lineHeights[i] ?? 0;
+    let x =
+      align === "left"
+        ? anchorX
+        : align === "center"
+          ? anchorX - line.width / 2
+          : anchorX - line.width;
+    for (const part of line.parts) {
+      setFont(ctx, slot, fontSize, style, part.style);
+      ctx.fillStyle = resolveRunColor(part.style.color, palette, defaultColor);
+      ctx.fillText(part.text, x, y + lineHeight / 2);
+      x += measure(part.text, fontSize, part.style);
+    }
+    y += lineHeight;
   });
 }
 
@@ -281,8 +328,18 @@ function drawPhotoPlaceholder(
   palette: Palette,
   radius: number,
 ) {
+  // A muted→accent sweep instead of flat gray: the placeholder follows the
+  // palette, so switching palettes is visible even before a photo is picked.
+  const gradient = ctx.createLinearGradient(
+    frame.x,
+    frame.y,
+    frame.x + frame.w,
+    frame.y + frame.h,
+  );
+  gradient.addColorStop(0, palette.colors.muted);
+  gradient.addColorStop(1, hexToRgba(palette.colors.accent, 0.55));
   pathRoundRect(ctx, frame, radius);
-  ctx.fillStyle = palette.colors.muted;
+  ctx.fillStyle = gradient;
   ctx.fill();
 }
 
