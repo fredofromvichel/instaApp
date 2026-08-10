@@ -247,14 +247,33 @@ const doppelpost: Template = {
   palettes: PALETTES,
   variants: [
     { id: "weich", name: "Abgerundet", overrides: {} },
-    { id: "kantig", name: "Kantig", overrides: { card: { cornerRadius: 0 } } },
+    {
+      id: "kantig",
+      name: "Kantig",
+      overrides: { card: { cornerRadius: 0 }, frame2: { cornerRadius: 0 } },
+    },
   ],
   slots: [
     {
       id: "bg",
       type: "background",
-      fill: { type: "solid", role: "accent" },
+      fill: { type: "solid", role: "background" },
       frames: WIDE_FRAMES,
+    },
+    {
+      // Accent border around page 2's card — the color highlight of this
+      // template, drawn as a shape so the background role stays the
+      // background (see ColorRole in engine/types.ts).
+      id: "frame2",
+      type: "shape",
+      shape: "rect",
+      fill: { type: "solid", role: "accent" },
+      cornerRadius: 64,
+      frames: onPage2({
+        square: { x: 32, y: 32, w: 1016, h: 1016 },
+        portrait: { x: 32, y: 32, w: 1016, h: 1286 },
+        story: { x: 32, y: 64, w: 1016, h: 1792 },
+      }),
     },
     {
       id: "photo",

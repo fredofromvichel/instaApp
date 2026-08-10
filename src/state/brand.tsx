@@ -10,7 +10,12 @@ import {
   useEffect,
   useState,
 } from "react";
-import { type BrandKit, loadBrandKit, saveBrandKit } from "../lib/brandStore";
+import {
+  type BrandKit,
+  EMPTY_BRAND_KIT,
+  loadBrandKit,
+  saveBrandKit,
+} from "../lib/brandStore";
 
 const BrandContext = createContext<{
   kit: BrandKit;
@@ -18,7 +23,7 @@ const BrandContext = createContext<{
 } | null>(null);
 
 export function BrandProvider({ children }: { children: ReactNode }) {
-  const [kit, setKit] = useState<BrandKit>({ colors: [] });
+  const [kit, setKit] = useState<BrandKit>(EMPTY_BRAND_KIT);
 
   useEffect(() => {
     void loadBrandKit().then(setKit);

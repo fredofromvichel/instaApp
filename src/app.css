@@ -455,37 +455,65 @@
   padding: 6px;
 }
 
-.swatch-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
 .swatch {
   width: 48px;
   height: 48px;
+  flex-shrink: 0;
   border-radius: 12px;
   border: 2px solid rgba(0, 0, 0, 0.12);
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--muted);
   font-size: 1.2rem;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-}
-
-.swatch-add {
-  background: var(--surface);
-  color: var(--muted);
   position: relative;
   overflow: hidden;
 }
 
-.swatch-add input[type="color"] {
+.swatch input[type="color"] {
   position: absolute;
   inset: 0;
   opacity: 0;
   cursor: pointer;
+}
+
+/* One of the three named color slots: swatch · label · reset. */
+.color-slot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.color-slot-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Live preview of the resulting palette, derived colors included. */
+.brand-preview {
+  border-radius: var(--radius);
+  padding: 16px;
+  border: 2px solid var(--line);
+}
+
+.brand-preview-card {
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.brand-preview-chip {
+  margin-top: 4px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
 }
 
 .toggle-row {

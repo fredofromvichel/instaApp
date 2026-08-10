@@ -11,6 +11,16 @@ import {
 } from "../engine/types";
 import { POST_FORMATS } from "../lib/formats";
 import { getTemplate, TEMPLATES } from "./catalog";
+import { PALETTES } from "./palettes";
+
+const ROLES = [
+  "background",
+  "surface",
+  "accent",
+  "text",
+  "textOnAccent",
+  "muted",
+] as const;
 
 describe("template frame geometry", () => {
   for (const template of TEMPLATES) {
@@ -112,4 +122,38 @@ describe("two-page templates", () => {
       }
     });
   }
+});
+
+describe("color roles", () => {
+  // The bug this guards against: a template painting its largest area with
+  // "surface" or "accent" made some palettes look like they did nothing there,
+  // while others recolored everything (engine/types.ts, ColorRole).
+  for (const template of TEMPLATES) {
+    it(`${template.id}: paints its background with the background role`, () => {
+      const background = template.slots.find((s) => s.type === "background");
+      // Templates without a background slot are covered by a full-bleed photo.
+      if (!background) {
+        const photo = template.slots.find((s) => s.type === "photo");
+        expect(
+          photo,
+          `${template.id} has neither background nor photo`,
+        ).toBeDefined();
+        return;
+      }
+      expect(background.fill.type).toBe("solid");
+      if (background.fill.type === "solid") {
+        expect(background.fill.role).toBe("background");
+      }
+    });
+  }
+
+  it("every palette differs from every other in more than one role", () => {
+    for (const a of PALETTES) {
+      for (const b of PALETTES) {
+        if (a.id === b.id) continue;
+        const differing = ROLES.filter((r) => a.colors[r] !== b.colors[r]);
+        expect(differing.length, `${a.id} vs ${b.id}`).toBeGreaterThan(1);
+      }
+    }
+  });
 });

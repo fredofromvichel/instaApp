@@ -390,15 +390,28 @@ const galerie: Template = {
     {
       id: "rund",
       name: "Runde Ecken",
-      overrides: { photo: { cornerRadius: 48 } },
+      overrides: { photo: { cornerRadius: 48 }, mat: { cornerRadius: 64 } },
     },
   ],
   slots: [
     {
       id: "bg",
       type: "background",
-      fill: { type: "solid", role: "surface" },
+      fill: { type: "solid", role: "background" },
       frames: FULL_FRAMES,
+    },
+    {
+      // The passe-partout: a surface mat the photo is mounted on.
+      id: "mat",
+      type: "shape",
+      shape: "rect",
+      fill: { type: "solid", role: "surface" },
+      cornerRadius: 12,
+      frames: {
+        square: { x: 40, y: 40, w: 1000, h: 668 },
+        portrait: { x: 40, y: 40, w: 1000, h: 888 },
+        story: { x: 40, y: 72, w: 1000, h: 1228 },
+      },
     },
     {
       id: "photo",

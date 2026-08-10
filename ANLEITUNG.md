@@ -116,8 +116,17 @@ gespeichertes Bild aus. Fertig! 🎉
   letzten Arbeiten und kannst jederzeit weitermachen. Mit dem **⧉-Knopf**
   öffnest du einen Entwurf als Kopie – ideal für Posts, die jede Woche
   ähnlich aussehen.
-- **Mein Stil:** Unter **„🎨 Mein Stil“** (auf dem Startbildschirm) kannst du
-  einmalig dein Logo und deine Lieblingsfarben hinterlegen. Dein Logo wird
-  dann automatisch angeboten, deine Farben erscheinen beim Anpassen.
+- **Mein Stil:** Unter **„🎨 Mein Stil“** (auf dem Startbildschirm) hinterlegst
+  du einmalig dein Logo und deine eigenen Farben. Bei den Farben gibt es drei
+  Plätze, und jeder hat eine feste Aufgabe:
+
+  1. **Hintergrund** – die große Fläche hinter allem
+  2. **Flächen & Akzente** – Preis-Schilder, Rahmen, kleine Hervorhebungen
+  3. **Schrift** – deine Textfarbe
+
+  Du musst nicht alle drei angeben: Schon eine Farbe reicht, den Rest wählen
+  wir passend dazu. Direkt darunter siehst du eine kleine Vorschau, wie das
+  Ergebnis aussieht. Beim Anpassen erscheinen deine Farben dann als Farbwelt
+  **„Deine Farben“** – und sie wirken in jeder Vorlage gleich.
 - **Privatsphäre:** Alles bleibt nur auf deinem Handy. Nichts wird
   hochgeladen, du brauchst kein Konto.

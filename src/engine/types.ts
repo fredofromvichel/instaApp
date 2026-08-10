@@ -21,6 +21,24 @@ export type FormatId = PostFormat["id"];
  * Slots never reference concrete colors, only semantic roles. Switching the
  * palette therefore re-colors the whole design consistently (SPEC.md §4).
  */
+/**
+ * Semantic color roles. Templates never hold concrete colors — they reference
+ * these, and the palette fills them in.
+ *
+ * The contract every template must honor, so that switching a palette changes
+ * *every* template comparably (SPEC.md §4). Getting this wrong is invisible in
+ * one template and glaring when the user compares two:
+ *
+ * - `background` — the page background. **The largest area of every design
+ *   must use this role**, otherwise a palette appears to do nothing there.
+ * - `surface` — cards, panels and mats lying on the background.
+ * - `accent` — chips, badges, rules: the small, strong highlights.
+ * - `text` — main text on background/surface. Also the ink of photo scrims:
+ *   text drawn on a scrim uses `background`, so the two always pair up and
+ *   invert together for dark palettes.
+ * - `muted` — secondary text on background/surface.
+ * - `textOnAccent` — text on an accent-colored area.
+ */
 export type ColorRole =
   | "background"
   | "surface"
